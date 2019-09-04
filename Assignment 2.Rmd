@@ -1,0 +1,247 @@
+---
+title: "Assignment 2"
+author: "Hans"
+date: "9/2/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Decay function
+
+```{r}
+decay <- function(t, k, P, A){
+  A * exp(-k*t) * sin (2*pi*t/P)
+}
+
+decay(1, 0.1, 4, 1)
+
+decay(P=4, t=1, A=1, k=0.1)
+```
+
+
+# Question 1 and 2
+
+```{r}
+decay(P=4, t=0.1, A=0.5, k=2.0)
+decay(P=4, t=100000, A=0.5, k=2.0)
+
+```
+
+# Question 3
+
+```{r}
+curve(decay(x, 0.1, 4, 1), 0, 50, xlab = "t", ylab = "decay", col = "red")
+```
+# Question 5
+
+You can use a different variable than x, but then you have to declare it
+
+```{r}
+curve(decay(t, 0.1, 4, 1), 0, 50, xlab="t", ylab="decay", col="red", xname = 't')
+
+```
+
+# Question 6
+
+Smoother version of the curve with 1000 points
+
+```{r}
+curve(decay(x, 0.1, 4, 1), 0, 50, xlab="t", ylab="decay", col="red", n = 1000)
+```
+
+
+# Question 7
+
+```{r}
+curve(decay(P=4, t, A=2, k=0.1), 0, 50, xlab="t", ylab="decay", col="blue", lty = 2, xname = 't', n = 1000)
+curve(decay(P=4, t, A=1, k=0.1), 0, 50, xlab="t", ylab="decay", col="red", xname = 't', n = 1000, add = TRUE)
+```
+
+# Question 8
+
+Different method of plotting
+
+```{r}
+xmin = 0
+xmax = 50
+xstep = 0.01
+
+#define vector of x values and corresponding function values for plotting
+xvals = seq(xmin, xmax, xstep) 
+yvals1 = decay(P=4, xvals, A=2, k=0.1)
+yvals2 = decay(P=4, xvals, A=1, k=0.1)
+
+#create an empty plot
+plot(1, xlab = "t", ylab = "decay", type = "n", xlim = c(xmin, xmax), ylim = c(min(yvals1), max(yvals1)))
+ 
+lines(xvals, yvals1, ylab="decay", col="blue", lty=2)
+lines(xvals, yvals2, ylab="decay", col="red")
+```
+
+
+# Question 9
+
+```{r}
+#install.packages("Deriv") 
+library(Deriv)
+
+f1 <- function(x, a, b, c) {
+  a*x^2 + b*exp(x) + c
+}
+f1
+(derf = Deriv(f1))
+
+
+f2 <- function(x, a) {
+  a*sin(b*x)
+}
+f2
+(derf = Deriv(f2))
+
+```
+
+
+# Question 10
+
+Now plot the function and its derivative
+
+```{r}
+a_val = 2
+b_val = 3
+c_val = 5
+h_val = 0
+#h_val = 100
+
+f1 <- function(x, a, b, c, h) {
+  a*x^2 + b*exp(x) + c - h
+}
+
+xmin = -10
+xmax = 4
+xstep = 0.01
+
+#define vector of x values and corresponding function values for plotting
+xvals = seq(xmin, xmax, xstep) 
+yvals = f1(xvals, a_val, b_val, c_val, h_val)
+  
+#create an empty plot
+plot(1, xlab = "t", ylab = "f1", type = "n", xlim = c(xmin, xmax), ylim = c(min(yvals), max(yvals)))
+lines(xvals, yvals, ylab="f1", col="blue")
+
+
+derf1 = Deriv(f1, "x")
+derf1
+
+#define vector of x values and corresponding function values for plotting
+xvals = seq(xmin, xmax, xstep) 
+dyvals = derf1(xvals, a_val, b_val, c_val, h_val)
+plot(1, xlab = "t", ylab = "df1", type = "n", xlim = c(xmin, xmax), ylim = c(min(dyvals), max(dyvals)))
+lines(xvals, dyvals, ylab="df1", col="red")
+
+```
+
+
+# Question 11
+
+```{r}
+xcross = uniroot(derf1, a = a_val, b = b_val, c = c_val, h = h_val, lower = -1, upper = 1)
+#xcross
+#xcross[[1]]
+#(f1(xcross$root))
+#class(cross)
+#class(cross[1])
+#(d = as.double(cross[1]))
+#(val_at_minimum = f1(-0.469))
+#(val_at_minimum = f1(d))
+#(val_at_minimum = f1(as.double(xcross[1])))
+xcross$root
+(val_at_minimum = f1(xcross$root, a = a_val, b = b_val, c = c_val, h = h_val))
+
+```
+
+
+# Question 12
+
+```{r}
+a = 2
+b = 3
+c = 5
+
+f1 <- function(x) {
+  a*x^2 + b*exp(x) + c - 100
+}
+
+xcross = uniroot(f1, lower = -2, upper = 4)
+xcross$root
+(f1(xcross$root))
+xcross = uniroot(f1, lower = -8, upper = -5)
+xcross$root
+(f1(xcross$root))
+```
+
+
+# Question 13
+
+Now plot the function and its derivative
+
+```{r}
+
+
+f1 <- function(x, a, b, c) {
+  a*x^2 + b*exp(x) + c
+}
+
+xmin = -5
+xmax = 5
+xstep = 0.01
+
+#define vector of x values and corresponding function values for plotting
+xvals = seq(xmin, xmax, xstep) 
+yvals = f1(xvals, a = 2, b = 3, c = 5)
+  
+#create an empty plot
+plot(1, xlab = "x", ylab = "f1(x)", type = "n", xlim = c(xmin, xmax), ylim = c(min(yvals), max(yvals)))
+lines(xvals, yvals, ylab="f1", col="blue")
+
+
+derf1 = Deriv(f1, "x")
+derf1
+
+#define vector of x values and corresponding function values for plotting
+xvals = seq(xmin, xmax, xstep) 
+dyvals = derf1(xvals, a = 2, b = 3, c = 5)
+plot(1, xlab = "t", ylab = "df1", type = "n", xlim = c(xmin, xmax), ylim = c(min(dyvals), max(dyvals)))
+lines(xvals, dyvals, ylab="df1", col="red")
+
+(uniroot(derf1, lower = -5, upper = 3, a = 2, b = 3, c = 5))
+
+```
+# Question 14 Hill
+
+```{r}
+hill <- function(L,h) {
+  L/(L+h)
+}
+
+lmin = 0
+lmax = 50
+step = 0.1
+
+h = 5
+
+#define vector of x values and corresponding function values for plotting
+lvals = seq(lmin, lmax, step) 
+hvals1 = hill(lvals, 5)
+hvals2 = hill(lvals, 10)
+  
+#create an empty plot
+plot(1, xlab = "L", ylab = "H(L)", type = "n", xlim = c(lmin, lmax), ylim = c(min(hvals1), max(hvals1)))
+lines(lvals, hvals1, ylab="f1", col="blue")
+lines(lvals, hvals2, ylab="f1", col="red")
+```
+
