@@ -9,8 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Use is made of a special package, that requires very specific input. Not important to understand exactly how that works.
+Just the line that starts with dY is important and that is the line that you change.
 
 ```{r}
+library(deSolve)
 expgrowth = function(timepoint, state, parameters) { 
   with (as.list(c(state, parameters)), {
     dY = a * Y
@@ -20,10 +23,9 @@ expgrowth = function(timepoint, state, parameters) {
 
 pars = c(a = 0.2)
 inistate = c(Y = 1)
-finish = seq(0, 10, by = 0.1)
+time_series = seq(0, 10, by = 0.1)
 
-library(deSolve)
-out = ode(y = inistate, times = finish, func = expgrowth, parms = pars)
+out = ode(y = inistate, times = time_series, func = expgrowth, parms = pars)
 plot(out, main = "", ylab = "Y")
 out
 ```
@@ -45,39 +47,43 @@ pars = c(a = -0.1)
 inistate1 = c(Y = 1)
 inistate2 = c(Y = 5)
 inistate3 = c(Y = 10)
-finish = seq(0, 10, by = 0.1)
+time_series = seq(0, 10, by = 0.1)
 
 
-out1 = ode(y = inistate1, times = finish, func = expgrowth, parms = pars)
-out2 = ode(y = inistate2, times = finish, func = expgrowth, parms = pars)
-out3 = ode(y = inistate3, times = finish, func = expgrowth, parms = pars)
-plot(out1, main = "", ylab = "Y", col = "red")
-plot(out2, main = "", ylab = "Y", col = "blue")
-plot(out3, main = "", ylab = "Y", col = "black")
+out1 = ode(y = inistate1, times = time_series, func = expgrowth, parms = pars)
+out2 = ode(y = inistate2, times = time_series, func = expgrowth, parms = pars)
+out3 = ode(y = inistate3, times = time_series, func = expgrowth, parms = pars)
 
+# First plot three different graphs.
+# Because out1 already contains all the data, you do not need to specify y data
+plot(out1, main = "Y = 1", ylab = "Y", col = "red")
+plot(out2, main = "Y = 5", ylab = "Y", col = "blue")
+plot(out3, main = "Y = 10", ylab = "Y", col = "black")
 
-#create an empty plot
+# Now plot them in one plot
+# create an empty plot
 plot(1, xlab = "time", ylab = "Y ", type = "n", xlim = c(0, 10), ylim = c(min(out3), max(out3)))
  
-lines(out1, ylab= "Y = 1", col="blue", lty=2)
-lines(out2, ylab= "Y = 5", col="red")
-lines(out3, ylab= "Y = 10", col="black")
+# Because out1 already contains all the data, you do not need to specify y data
+lines(out1, ylab = "Y = 1", col = "blue", lty=2)
+lines(out2, ylab = "Y = 5", col = "red")
+lines(out3, ylab = "Y = 10", col = "black")
 ```
 
 
 # Exercise 2
 
 ```{r}
-(finalstate = out1[nrow(out1),2])
+(finalstate = out[nrow(out),2])
 ```
 
 # Exercise 3
 
 ```{r}
-(finalstate = out1[nrow(out1),-1])
+(finalstate = out[nrow(out),-1])
 
-# Why does the following not work?
-(finalstate = out1[-1,-1])
+# Why does the following not work
+#(finalstate = out[-1,-1])
 ```
 
 
@@ -93,26 +99,30 @@ expgrowth = function(timepoint, state, parameters) {
 
 pars = c(a = 0.1)
 inistate1 = c(Y = 1)
-finish1 = seq(0, 10, by = 0.1)
-out1 = ode(y = inistate1, times = finish1, func = expgrowth, parms = pars)
-
+time_series = seq(0, 10, by = 0.1)
+out1 = ode(y = inistate1, times = time_series, func = expgrowth, parms = pars)
 
 pars = c(a = -0.01)
-inistate1 = out1[nrow(out1),-1]
-finish2 = seq(10, 100, by = 0.1)
-out2 = ode(y = inistate1, times = finish2, func = expgrowth, parms = pars)
+inistate1 = out1[nrow(out1),-1]  # The start pointis where the first series stopped
+time_series = seq(10, 100, by = 0.1)
+out2 = ode(y = inistate1, times = time_series, func = expgrowth, parms = pars)
 
-#create an empty plot
+# Determine the minima and maxima - the values are in the 2nd column
 (ymin = min(out1[,2], out2[,2]))
 (ymax = max(out1[,2], out2[,2]))
+
+#create an empty plot
 plot(1, xlab = "time", ylab = "Y ", type = "n", xlim = c(0, 100), ylim = c(ymin, ymax))
- 
+
+# Draw the lines
 lines(out1, ylab = "Y = 1", col="blue", lty=2)
 lines(out2, ylab = "Y = 1", col="blue", lty=2)
 ```
 
 
 # Exercise 5
+
+Found out by trying: unstable for a > 0 and stable for a < 0 
 
 ```{r}
 library("phaseR")
@@ -123,56 +133,19 @@ expgrowth = function(timepoint, state, parameters) {
     list(c(dY)) 
   })
 }
+
+
 pars <- c(a = 0.2)
-
-
 phaseport = phasePortrait(expgrowth, parameters = pars, ylim = c(-2, 2), points = 10, xlab = "Y", ylab = "dY/dt (a = 1)", state.names = c("Y")) 
 grid() 
-
 stab.expgrowth = stability(expgrowth, ystar = 0, parameters = pars, system = "one.dim", state.names = c("Y"))
 
-pars <- c(a = 1)
-
+pars <- c(a = -0.2)
 phaseport = phasePortrait(expgrowth, parameters = pars, ylim = c(-2, 2), points = 10, xlab = "Y", ylab = "dY/dt (a = 1)", state.names = c("Y")) 
 grid() 
-
-stab.expgrowth = stability(expgrowth, ystar = 0, parameters = pars, system = "one.dim", state.names = c("Y"))
-
-pars <- c(a = 10)
-
-phaseport = phasePortrait(expgrowth, parameters = pars, ylim = c(-2, 2), points = 10, xlab = "Y", ylab = "dY/dt (a = 10)", state.names = c("Y")) 
-grid() 
-
-stab.expgrowth = stability(expgrowth, ystar = 0, parameters = pars, system = "one.dim", state.names = c("Y"))
-
-pars <- c(a = 0.10)
-
-phaseport = phasePortrait(expgrowth, parameters = pars, ylim = c(-2, 2), points = 10, xlab = "Y", ylab = "dY/dt (a = 0.10)", state.names = c("Y")) 
-grid() 
-
-stab.expgrowth = stability(expgrowth, ystar = 0, parameters = pars, system = "one.dim", state.names = c("Y"))
-
-pars <- c(a = 0.010)
-
-phaseport = phasePortrait(expgrowth, parameters = pars, ylim = c(-2, 2), points = 10, xlab = "Y", ylab = "dY/dt (a = 0.010)", state.names = c("Y")) 
-grid() 
-
-stab.expgrowth = stability(expgrowth, ystar = 0, parameters = pars, system = "one.dim", state.names = c("Y"))
-
-pars <- c(a = -1)
-
-phaseport = phasePortrait(expgrowth, parameters = pars, ylim = c(-2, 2), points = 10, xlab = "Y", ylab = "dY/dt (a = -1)", state.names = c("Y")) 
-grid() 
-
 stab.expgrowth = stability(expgrowth, ystar = 0, parameters = pars, system = "one.dim", state.names = c("Y"))
 
 
-pars <- c(a = -5)
-
-phaseport = phasePortrait(expgrowth, parameters = pars, ylim = c(-2, 2), points = 10, xlab = "Y", ylab = "dY/dt (a = -5)", state.names = c("Y")) 
-grid() 
-
-stab.expgrowth = stability(expgrowth, ystar = 0, parameters = pars, system = "one.dim", state.names = c("Y"))
 ```
 
 
