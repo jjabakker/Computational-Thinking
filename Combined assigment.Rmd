@@ -1,0 +1,304 @@
+---
+title: "Combined Assignment"
+author: "Hans"
+date: "9/13/2019"
+output: html_document
+---
+
+# Intro
+
+## Setup - always run
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(nycflights13)
+p_load(ggplot2)
+p_load(Deriv)
+p_load(deSolve)
+p_load(phaseR)
+p_load(pracma)
+p_load(extraData)
+theme_set(theme_minimal())
+```
+
+
+## Setup - Inspection 
+```{r}
+#install.packages("tidyverse")
+library(tidyverse)
+ls('package:tidyverse')
+```
+
+ICT intro lecture R workshop
+
+## Exercise 6
+
+```{r}
+xseq <- seq(from = 0, to = 2 * pi, by = 0.01)
+yseq <- sin(xseq)
+df  <- data.frame(x = xseq, y = yseq)
+ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y)) +
+  labs(x = "x") +
+  labs(y = "sin(x)") +
+  labs(title = "New Plot", subtitle = "New subtitle")
+```
+
+
+## Exercise 18
+
+```{r}
+people_in_tox <- c('Bob', 'Erik', 'Joost', 'Sylvia', 'Gerhard', 'Hans', 'Chantal')
+
+for (person in people_in_tox) {
+  cat ("Hi,", person, "\n")
+}
+
+for (i in 1:length(people_in_tox)) {
+  cat ("Hi,", people_in_tox[i], "\n")
+}
+
+paste("Hi", people_in_tox)
+
+```
+
+
+## Exercise 18
+
+data(iris)
+write_csv(iris, "iris.csv") 
+my_loaded_iris_data <- read_csv("iris.csv")
+
+
+# Mathematical fundamentals in R
+
+## Exercise 1 - 5
+
+
+```{r}
+decay = function(t, k, P, A) {
+  A* exp(-k*t) * sin(2*pi*t/P)
+}
+
+tseq = seq (0, 50, 0.01)
+y1seq = decay(tseq, k = 0.1, P = 4, A = 1)
+y2seq = decay(tseq, k = 0.1, P = 4, A = 2)
+df  <- data.frame(x = tseq, y1 = y1seq, y2 = y2seq)
+
+ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y1), col= 'red') +
+  geom_line(mapping = aes(x = x, y = y2), col= 'blue', linetype = "dashed") +
+  ylim(-2, 2) +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle")
+
+```
+
+
+## Exercise 9
+
+```{r}
+f1 <- function (x, a, b, c) {
+  a*x^2 + b*exp(x) + c
+}
+
+df.f1 = Deriv(f1, "x")
+df.f1
+```
+
+## Exercise 9 and 10
+
+```{r}
+f1 <- function (x, a, b, c) {
+  a*x^2 + b*exp(x) + c
+}
+
+a = 2
+b = 3
+c = 5
+
+df.f1 = Deriv(f1, "x")
+df.f1
+
+tseq = seq (-10, 5, 0.01)
+y1seq = f1(tseq, a, b, c)
+y2seq = df.f1(tseq, a, b, c)
+df  <- data.frame(x = tseq, y1 = y1seq, y2 = y2seq)
+
+
+p1 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y1), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle") 
+p2 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y2), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle")
+
+
+gridExtra::grid.arrange(
+    p1, 
+    p2, 
+    nrow = 1
+)
+```
+
+## Exercise 11
+
+```{r}
+
+
+# Change the x interval to see where the df.fi crosses zero
+
+tseq = seq (-1, 1, 0.01)
+y1seq = f1(tseq, a, b, c)
+y2seq = df.f1(tseq, a, b, c)
+df  <- data.frame(x = tseq, y1 = y1seq, y2 = y2seq)
+
+p1 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y1), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle") 
+p2 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y2), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle")
+
+gridExtra::grid.arrange(
+    p1, 
+    p2, 
+    nrow = 1)
+
+# OK, clearly to see that -0.5 and 0.5 are good valyes to try for the solving
+
+xcross = uniroot(df.f1, lower = -0.5, upper = 0.5, a = a, b = b, c = c)
+xcross$root
+
+cat ("The minimum is at x = ", xcross$root)
+cat ("The function value there =", f1(xcross$root, a = a, b = b, c = c))
+
+# Can that be right?
+
+tseq = seq (-0.5, -0.45, 0.001)
+y1seq = f1(tseq, a, b, c)
+y2seq = df.f1(tseq, a, b, c)
+df  <- data.frame(x = tseq, y1 = y1seq, y2 = y2seq)
+
+
+p1 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y1), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle") 
+p1
+```
+
+## Exercise 12
+
+```{r}
+
+# First change the function
+
+f1 <- function (x, a, b, c) {
+  a*x^2 + b*exp(x) + c - 100
+}
+
+# Change the x interval to see where the f1 crosses zero
+
+xseq = seq (-12, 5, 0.01)
+yseq = f1(xseq, a, b, c)
+df  <- data.frame(x = xseq, y = yseq)
+
+p1 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle") 
+p1
+
+# There are two points to consider (0, 4) and (-10, -5)
+
+
+xcross1 = uniroot(f1, lower = 0, upper = 4, a = a, b = b, c = c)
+xcross2 = uniroot(f1, lower = -10, upper = -5, a = a, b = b, c = c)
+
+cat ("The x values are ", xcross1$root, "and", xcross2$root)
+
+# Check
+f1(xcross1$root, a = a, b = b, c = c)
+f1(xcross2$root, a = a, b = b, c = c)
+
+```
+
+## Exercise 13
+
+```{r}
+
+a = -2
+b = 3
+c = 5
+
+# Change the x interval to see where the df.fi crosses zero
+
+tseq = seq (-10, 5, 0.01)
+y1seq = f1(tseq, a, b, c)
+y2seq = df.f1(tseq, a, b, c)
+df  <- data.frame(x = tseq, y1 = y1seq, y2 = y2seq)
+
+p1 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y1), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle") 
+p2 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y2), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle")
+
+gridExtra::grid.arrange(
+    p1, 
+    p2, 
+    nrow = 1)
+
+# Does the df function ever go through zero? Cjhange the interval
+
+tseq = seq (0, 1, 0.01)
+y1seq = f1(tseq, a, b, c)
+y2seq = df.f1(tseq, a, b, c)
+df  <- data.frame(x = tseq, y1 = y1seq, y2 = y2seq)
+
+p1 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y1), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle") 
+p2 <- ggplot(data = df) +
+  geom_line(mapping = aes(x = x, y = y2), col = 'red') +
+  labs(x = "t") +
+  labs(y = "decay(t)") +
+  labs(title = "New Plot", subtitle = "New subtitle")
+
+gridExtra::grid.arrange(
+    p1, 
+    p2, 
+    nrow = 1)
+
+# No, never a x-axis crossing 
+# Can not cakcukate  with uniroot (try it and it will complain) ) 
+
+# xcross = uniroot(df.f1, lower = -0.5, upper = 0.5, a = a, b = b, c = c)
+# xcross$root
+
+
+```
+
+
+

@@ -1,0 +1,337 @@
+---
+title: "Data Wrangling"
+author: "Hans"
+date: "9/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(nycflights13)
+```
+
+
+# Question 1
+
+There are two differences:
+
+* The sequence of the columns
+* The capitalisatiion of weight
+
+Unclear why this works!
+
+```{r}
+# The data is in long format
+cw_l1 <- ChickWeight %>% as_tibble
+
+cw_l1
+
+#
+# This syntax is not understood
+#
+
+cw_w <- cw_l1 %>% spread(-Chick, -Diet)
+cw_w
+
+#
+# This syntax is more clear
+#
+
+cw_w <-  cw_l1 %>% spread(key = 'Time', value = weight)
+cw_w
+
+#
+# This syntax is not understood
+#
+
+cw_l2 <- cw_w %>% gather(key = "Time", value = "Weight", 
+                         -Chick, -Diet) %>% arrange(Chick)
+cw_l2
+
+#
+# This syntax is more clear
+#
+
+cw_l2 <- cw_w %>% gather(key = "Time", value = "Weight", c(`0`:`21`))
+cw_l2
+
+
+# You can arrange the output
+
+cw_l2 %>%
+  arrange(as.numeric(Time), desc(Diet))
+
+# But for some reason you can not arrange on Chick
+cw_l2 %>%
+  mutate(seq_chick = as.numeric(Chick)) %>%
+  arrange(seq_chick)
+
+```
+
+# Exercises with Iris
+
+
+## Exercise 2
+
+Iris is tidy. It is in long format
+
+## Exercise 3
+
+Iris can be made 'longer'
+
+```{r}
+head(iris, 20) 
+iris <- iris %>% as_tibble
+
+iris
+iris_longer1 <- gather(iris, key = 'Variable', value = "Measurement",
+                       Sepal.Length:Petal.Width)
+iris_longer1
+
+iris_longer2 <- gather(iris, key ='Variable', value = "Measurement",
+                       c(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width))
+iris_longer2
+
+iris_longer3 <- iris %>% gather(key ='Variable', value = "Measurement",
+                                Sepal.Length:Petal.Width)
+iris_longer3
+```
+
+
+```{r}
+library(dplyr)
+# From http://stackoverflow.com/questions/1181060
+stocks <- tibble(
+  time = as.Date('2009-01-01') + 0:9,
+  X = rnorm(10, 0, 1),
+  Y = rnorm(10, 0, 2),
+  Z = rnorm(10, 0, 4)
+)
+stocks
+gather(stocks, "stock", "price", X:Z)
+stocks %>% gather("stock", "price", -time)
+```
+
+```{r}
+head(iris,20)
+iris_longer <- iris %>% gather(key = 'Variable', value ="Measurement",
+                               c(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width))
+iris_longer
+```
+
+
+# Exercise 4
+
+Now try to go backwards
+
+That does not work: you get an error
+
+```{r}
+# iris_longer %>% spread(key = 'Variable', value = 'Measurement')
+```
+
+# Exercise 5
+
+To circumvent the problem you need to add a row number
+
+```{r}
+iris
+iris_longer <- iris %>% 
+               rowid_to_column %>% 
+               gather(key = 'Variable', value ="Measurement", 
+                      c(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width))
+iris_longer
+iris_wide <- iris_longer %>% spread(key = 'Variable', value = 'Measurement')
+iris_wide
+```
+
+# Exercise 6
+```{r}
+il = iris_longer %>% separate(col = Variable, sep="[.]", into = c("Var 1", "Var 2")) %>% select(-rowid)
+il
+```
+
+# Exercise 7 Make the tables look alike 
+
+```{r}
+
+# The iris_wide table looks like this
+iris_wide
+
+# It should be the same as the iris table
+iris
+
+# This is iris_wide after conversion
+iris_wide %>% select(Sepal.Length,Sepal.Width, Petal.Length, Petal.Width, Species)
+```
+
+# Exercise 8 Flowers of setosa that have Sepal.Length bigger than 5.0
+
+```{r}
+filter(iris, Sepal.Length > 5, Species == "setosa") 
+```
+
+
+# Exercise 9 Flowers of setosa and versicolor
+
+```{r}
+filter(iris, Sepal.Length > 5, Species == "setosa" | Species == "versicolor")
+filter(iris, Sepal.Length > 5, Species %in% c("setosa","versicolor"))
+```
+
+# Excercise 10
+
+```{r Excercise 10}
+iris_wide %>% summarise(meanSepalLength = mean(Sepal.Length),
+                        meanSepalWidth = mean(Sepal.Width),
+                        meanPetalLength = mean(Petal.Width),
+                        meanPetalWidth = mean(Petal.Width))
+
+#
+# Get the mean values for the four parameters for the three species 
+#
+
+iris_longer %>%  
+  group_by(Species, Variable) %>%
+  summarise((mean(Measurement)))
+  
+
+#
+# Get the mean values for the four parameters (ignoring the different species) 
+#
+
+iris_longer %>%  
+  group_by(Variable) %>%
+  summarise((mean(Measurement)))
+
+
+t = iris_longer %>% filter(Variable == "Sepal.Length") %>% select(Measurement)
+t
+```
+
+
+# Excercise 11
+
+```{r Excercise 11}
+#filter(iris, Sepal.Length > 5, Species == "setosa" | Species == "versicolor")`
+
+```
+
+
+# Excercise 13
+
+```{r Excercise 13}
+
+library(nycflights13)
+flights
+
+# Here you get all the flights executed on each day by Envoy Air 
+
+flights %>% left_join(airlines) %>% 
+  select(year, month, day, flight, tailnum, name) %>% 
+  filter(name == 'Envoy Air')
+
+# Here you get all the flights executed by Envoy Air on 1 January
+
+flights %>% left_join(airlines, by = 'carrier') %>% 
+  select(year, month, day, flight, tailnum, name) %>% 
+  filter(name == 'Envoy Air', year == 2013, month == 1, day == 1)
+
+# If you want to know how many flights Envoy Air has each day
+
+flights %>% left_join(airlines) %>% 
+  filter(name == 'Envoy Air') %>% 
+  count(year, month, day, flight, tailnum, name) 
+
+# If you want to know how many flights Envoy Air has each month in 2013
+
+flights %>% left_join(airlines) %>% 
+  filter(name == 'Envoy Air') %>% 
+  count(year, month) 
+
+# If you want to know how many flights Envoy Air has every day in June month in 2013
+
+flights %>% left_join(airlines) %>% 
+  filter(name == 'Envoy Air', month == 6) %>% 
+  count(day) 
+
+# If you want to know how many flights Envoy Air has in June month in 2013
+
+flights %>% left_join(airlines) %>% 
+  select(year, month, day, flight, tailnum, name) %>% 
+  filter(name == 'Envoy Air', year == 2013, month == 6) %>% count()
+
+flights %>% left_join(airlines) %>% 
+  select(tailnum, flight, name) %>% 
+  filter(name == 'Envoy Air')
+
+airlines %>% right_join(flights) %>% 
+  select(year, month, day, tailnum, name) %>% 
+  filter(name == 'Envoy Air')
+
+
+# Analyse the flights table
+
+# Some planes have been used a lot in 2013
+
+flights %>% 
+  count(tailnum)
+
+# The number of different planes used is
+
+dif_planes <-flights %>% 
+  count(tailnum) %>% 
+  count() 
+
+# The number of different planes for which date is available is much smaller
+
+plane_info <- planes %>% count()
+
+cat("There are", dif_planes$n, " planes refered to in the flights database, but there are only",  plane_info$n, "plane descriptions." )
+
+# How many records are there in the flights table?
+flights %>%
+  count()
+
+# What is the average departure delay on the origin airports
+flights %>%
+  group_by(origin) %>%
+  summarise(delay=mean(dep_delay))
+
+# What is the average arrival delay on the destination airports
+flights %>%
+  group_by(dest) %>%
+  summarise(delay=mean(arr_delay,na.rm = TRUE))
+
+# What is the average departure delay per month?
+d <- flights %>%
+  group_by(month) %>%
+  summarise(delay=mean(dep_delay, na.rm=TRUE))
+d
+
+ggplot(data = d) + 
+    geom_bar(mapping = aes(x=month))
+
+
+# How manuy destinations are there?
+flights %>%
+  group_by(dest) %>%
+  summarise() %>% count()
+
+ 
+```
+
+# Exercise 14
+
+```{r}
+
+# Flights with a tailnum fro which no info is available from 'planes'
+planes
+
+anti_join(flights, planes, by = "tailnum")
+
+anti_join(planes, flights, by = "tailnum")
+```
+
