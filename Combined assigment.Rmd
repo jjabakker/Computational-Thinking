@@ -5,7 +5,7 @@ date: "9/13/2019"
 output: html_document
 ---
 
-# Intro
+# Intro Workshop
 
 ## Setup - always run
 
@@ -20,15 +20,14 @@ p_load(deSolve)
 p_load(phaseR)
 p_load(pracma)
 p_load(extraData)
+p_load(maggrit)
 theme_set(theme_minimal())
 ```
 
-
-## Setup - Inspection 
 ```{r}
 #install.packages("tidyverse")
-library(tidyverse)
-ls('package:tidyverse')
+#library(tidyverse)
+#ls('package:tidyverse')
 ```
 
 ICT intro lecture R workshop
@@ -68,7 +67,7 @@ paste("Hi", people_in_tox)
 ## Exercise 18
 
 data(iris)
-write_csv(iris, "iris.csv") 
+write_csv(iris, "iris.csv")
 my_loaded_iris_data <- read_csv("iris.csv")
 
 
@@ -111,6 +110,10 @@ df.f1
 
 ## Exercise 9 and 10
 
+Question 9: Install the package Deriv and load it. Define a function f1(x) = ax2 + bex + c and calculate the symbolic derivative both by pen and paper and with R. Store the derivative as a function.
+
+Question 10: Set the parameters to a = 2, b = 3 and c = 5 and plot both f1(x) and f1′ (x) in graphs next to each other with the same range (x values). Note that graphs can be plotted next to each other using par(mfrow=c(1,2)), which generates a field of 1 row and 2 columns for subsequent plots to be generated in. Search for a suitable range such that you understand what the graphical behaviour of the function is.
+
 ```{r}
 f1 <- function (x, a, b, c) {
   a*x^2 + b*exp(x) + c
@@ -133,7 +136,7 @@ p1 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y1), col = 'red') +
   labs(x = "t") +
   labs(y = "decay(t)") +
-  labs(title = "New Plot", subtitle = "New subtitle") 
+  labs(title = "New Plot", subtitle = "New subtitle")
 p2 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y2), col = 'red') +
   labs(x = "t") +
@@ -142,13 +145,15 @@ p2 <- ggplot(data = df) +
 
 
 gridExtra::grid.arrange(
-    p1, 
-    p2, 
+    p1,
+    p2,
     nrow = 1
 )
 ```
 
 ## Exercise 11
+
+Question 11: For the above given parameters the function has a minimum. First zoom in on the graphs and roughly estimate the x and y values at this minimum. Then estimate the x value more precisely by using the function uniroot, which searches within a given numerical range for which value a function equals zero (use the help to find out how to do this). Next, find the function value at this minimum.
 
 ```{r}
 
@@ -164,7 +169,7 @@ p1 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y1), col = 'red') +
   labs(x = "t") +
   labs(y = "decay(t)") +
-  labs(title = "New Plot", subtitle = "New subtitle") 
+  labs(title = "New Plot", subtitle = "New subtitle")
 p2 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y2), col = 'red') +
   labs(x = "t") +
@@ -172,8 +177,8 @@ p2 <- ggplot(data = df) +
   labs(title = "New Plot", subtitle = "New subtitle")
 
 gridExtra::grid.arrange(
-    p1, 
-    p2, 
+    p1,
+    p2,
     nrow = 1)
 
 # OK, clearly to see that -0.5 and 0.5 are good valyes to try for the solving
@@ -196,11 +201,13 @@ p1 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y1), col = 'red') +
   labs(x = "t") +
   labs(y = "decay(t)") +
-  labs(title = "New Plot", subtitle = "New subtitle") 
+  labs(title = "New Plot", subtitle = "New subtitle")
 p1
 ```
 
 ## Exercise 12
+
+Question 12: For the given parameters, the function f1(x) has a value of 100 both for a negative and for a positive x value. Find out what these x values are. Hint: the function uniroot can be used to numerically find these values, but you first need to define a new, shifted function for this purpose.
 
 ```{r}
 
@@ -220,7 +227,7 @@ p1 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y), col = 'red') +
   labs(x = "t") +
   labs(y = "decay(t)") +
-  labs(title = "New Plot", subtitle = "New subtitle") 
+  labs(title = "New Plot", subtitle = "New subtitle")
 p1
 
 # There are two points to consider (0, 4) and (-10, -5)
@@ -239,6 +246,8 @@ f1(xcross2$root, a = a, b = b, c = c)
 
 ## Exercise 13
 
+Question 13: Change the value of the a parameter to −2. Investigate how this changes the shape of the graph. Can you find again the x value where the derivative is 0 using uniroot? Explain what happens.
+
 ```{r}
 
 a = -2
@@ -256,7 +265,7 @@ p1 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y1), col = 'red') +
   labs(x = "t") +
   labs(y = "decay(t)") +
-  labs(title = "New Plot", subtitle = "New subtitle") 
+  labs(title = "New Plot", subtitle = "New subtitle")
 p2 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y2), col = 'red') +
   labs(x = "t") +
@@ -264,8 +273,8 @@ p2 <- ggplot(data = df) +
   labs(title = "New Plot", subtitle = "New subtitle")
 
 gridExtra::grid.arrange(
-    p1, 
-    p2, 
+    p1,
+    p2,
     nrow = 1)
 
 # Does the df function ever go through zero? Cjhange the interval
@@ -279,7 +288,7 @@ p1 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y1), col = 'red') +
   labs(x = "t") +
   labs(y = "decay(t)") +
-  labs(title = "New Plot", subtitle = "New subtitle") 
+  labs(title = "New Plot", subtitle = "New subtitle")
 p2 <- ggplot(data = df) +
   geom_line(mapping = aes(x = x, y = y2), col = 'red') +
   labs(x = "t") +
@@ -287,12 +296,12 @@ p2 <- ggplot(data = df) +
   labs(title = "New Plot", subtitle = "New subtitle")
 
 gridExtra::grid.arrange(
-    p1, 
-    p2, 
+    p1,
+    p2,
     nrow = 1)
 
-# No, never a x-axis crossing 
-# Can not cakcukate  with uniroot (try it and it will complain) ) 
+# No, never a x-axis crossing
+# Can not cakcukate  with uniroot (try it and it will complain) )
 
 # xcross = uniroot(df.f1, lower = -0.5, upper = 0.5, a = a, b = b, c = c)
 # xcross$root
@@ -301,4 +310,1007 @@ gridExtra::grid.arrange(
 ```
 
 
+## Exercise 14 Hill
+
+Question 14: Define this Hill function in R and plot the function for different values of h. What is the effect of the parameter h? How does it affect the function value that is attained for very high ligand concentrations? Check your numerical results by calculating the limit where L approaches ∞ symbolically.
+
+```{r}
+hill <- function(L, h) {
+  L / (L+h)
+}
+
+lseq = seq(0, 10, 0.01)
+h1seq = hill(lseq, 1)
+h2seq = hill(lseq, 2)
+h5seq = hill(lseq, 3)
+
+
+df = data.frame(l = lseq, h1 = h1seq, h2 = h2seq, h3 = h5seq)
+
+ggplot(df) +
+  geom_line(mapping = aes(x = l, y = h1), color = "blue") +
+  geom_line(mapping = aes(x = l, y = h2), color = "red") +
+  geom_line(mapping = aes(x = l, y = h3), color = "black") +
+  ylim(0, 1) +
+  labs(title = "Plot Title",
+       x = "Horizontal label",
+       y = "Vertical label")
+
+# The asymptote is at
+asymptote = hill(10^6, 3)
+cat ("Asymptote is", asymptote)
+
+```
+
+
+## Exercise 15
+
+Question 15: Find out for which value of L half of the receptor molecules is occupied for the cases with h = 5.6 and h = 17.8. Use the function uniroot to approximate these values numerically (note that you first need to define a new function in order to use uniroot for this purpose!). How does this value relate to the value of h?
+
+```{r}
+
+# Redefine to get the 0.5
+hill_0.5 <- function(L, h) {
+  L / (L+h) - 0.5
+}
+
+lseq = seq(0, 30, 0.01)
+h1seq = hill_0.5(lseq, 5.6)
+h2seq = hill_0.5(lseq, 17.8)
+
+df = data.frame(l = lseq, h1 = h1seq, h2 = h2seq)
+
+ggplot(df) +
+  geom_line(mapping = aes(x = l, y = h1), color = "blue") +
+  geom_line(mapping = aes(x = l, y = h2), color = "red") +
+  labs(title = "Plot Title",
+       x = "Horizontal label",
+       y = "Vertical label")
+xcross1 = uniroot(hill_0.5, h = 5.6, lower = 4.5, upper = 6)
+xcross2 = uniroot(hill_0.5, h = 17.8, lower = 15, upper = 20)
+xcross1$root
+xcross2$root
+
+(hill_0.5(xcross1$root, h = 5.6))
+(hill_0.5(xcross2$root, h = 17.8))
+```
+
+## Exercise 16
+
+Question 16: Use R to calculate the derivative of the Hill function with respect to L. Plot dH/dL and calculate its value at a ligand concentration of 0. How does this value depend on the value of h? Check this result by symbolic calculation.
+
+```{r}
+
+hill <- function(L, h) {
+  L / (L+h)
+}
+
+df.hill = Deriv(hill, "L")
+df.hill
+
+lseq = seq(0, 50, 0.01)
+h1seq = df.hill(lseq, 10)
+h2seq = df.hill(lseq, 5)
+
+df = data.frame(l = lseq, h1 = h1seq, h2 = h2seq)
+
+ggplot(df) +
+  geom_line(mapping = aes(x = l, y = h1), color = "blue") +
+  geom_line(mapping = aes(x = l, y = h2), color = "red") +
+  labs(title = "Plot Title",
+       x = "Horizontal label",
+       y = "Vertical label")
+
+df.hill(1e6, 5)
+```
+
+## Exercise 17
+
+A more general Hill function considers the scenario where ligands may bind receptor molecules at multiple binding sites: H(L) = L^n / (h^n + L^n). Thus, in the situation considered above the parameter n was set to 1. Use R to find out what happens to the shape of the graph when n is increased to values higher than 1. Does this change the behaviour at very high concentrations? (approach numerically and calculate the limit symbolically). What do you notice for the ligand concentration at which the receptor occupancy is half-maximal?
+
+```{r}
+
+hilln <- function(L, h, n) {
+  L^n / (h^n + L^n)
+}
+
+lseq = seq(0, 50, 0.01)
+h1seq = hilln(lseq, h = 5, n = 1)
+h2seq = hilln(lseq, h = 5, n = 2)
+h5seq = hilln(lseq, h = 5, n = 3)
+
+df = data.frame(l = lseq, h1 = h1seq, h2 = h2seq, h3 = h5seq)
+
+ggplot(df) +
+  geom_line(mapping = aes(x = l, y = h1), color = "blue") +
+  geom_line(mapping = aes(x = l, y = h2), color = "red") +
+  geom_line(mapping = aes(x = l, y = h3), color = "black") +
+  ylim(0, 1) +
+  labs(title = "Plot Title",
+       x = "Horizontal label",
+       y = "Vertical label")
+
+# The asymptote is at
+asymptote = hilln(10^6, 5, 3)
+cat ("Asymptote is", asymptote)
+
+```
+
+## Exercise 18
+
+Question 18: Use R to calculate the derivative of the more general Hill function with respect to L. As before, plot dH/dL and calculate its value at a ligand concentration of 0. How does this value depend on the value of h? Check this result by symbolically calculating the derivative of H(L) and evaluating the result at L = 0.
+
+
+```{r}
+
+hilln <- function(L, h, n) {
+  L^n / (h^n + L^n)
+}
+
+df.hilln = Deriv(hilln, "L")
+df.hilln
+
+lseq = seq(0, 10, 0.01)
+h1seq = df.hilln(lseq, h = 5, n = 1)
+h2seq = df.hilln(lseq, h = 5, n = 2)
+h3seq = df.hilln(lseq, h = 5, n = 3)
+h4seq = df.hilln(lseq, h = 5, n = 10)
+
+
+df = data.frame(l = lseq, h1 = h1seq, h2 = h2seq, h3 = h3seq, h4 = h4seq)
+
+ggplot(df) +
+  geom_line(mapping = aes(x = l, y = h2), color = "red") +
+  geom_line(mapping = aes(x = l, y = h3), color = "black") +
+  geom_line(mapping = aes(x = l, y = h4), color = "blue") +
+  labs(title = "Plot Title",
+       x = "Horizontal label",
+       y = "Vertical label")
+
+df.hilln(1e6, h = 5, n = 10)
+df.hilln(10, h = 5, n = 10)
+```
+
+## Exercise 19
+
+Question 19: (difficult question for interested students) From the plots of the derivative for increasing values of n it can be seen that the ligand concentration for which the slope of the Hill function is maximal shifts to the right when n increases. Use R to draw a plot of this particular ligand concentration as a function of n. (Hint: one way to solve this involves the function sapply.) What happens to the ligand concentration at which the maximal slope occurs for large values of n?
+
+
+```{r}
+hilln <- function(L, h, n) {
+  L^n / (h^n + L^n)
+}
+
+df.hilln = Deriv(hilln, "L")
+df.hilln
+
+ddf.hilln = Deriv(df.hilln, "L")
+ddf.hilln
+
+lseq = seq(0, 10, 0.01)
+h1seq = ddf.hilln(lseq, h = 5, n = 1)
+h2seq = ddf.hilln(lseq, h = 5, n = 2)
+h3seq = ddf.hilln(lseq, h = 5, n = 3)
+h4seq = ddf.hilln(lseq, h = 5, n = 10)
+
+ddf = data.frame(l = lseq, h1 = h1seq, h2 = h2seq, h3 = h3seq, h4 = h4seq)
+
+ggplot(ddf) +
+  geom_line(mapping = aes(x = l, y = h2), color = "red") +
+  geom_line(mapping = aes(x = l, y = h3), color = "black") +
+  geom_line(mapping = aes(x = l, y = h4), color = "blue") +
+  labs(title = "Plot Title",
+       x = "Horizontal label",
+       y = "Vertical label")
+
+# The maxima in df are where ddf crosses 0
+
+# Define a function that takes n as parameter and finds the root
+
+# Difficult: The format of the function is quite specific
+findroot <- function (n) {
+  #uniroot(ddf.hilln, n = n, h = 5, lower = 0,  upper = 10)$root
+  uniroot(ddf.hilln,c(0.01,10), n = n, h = 5)$root
+}
+
+# Difficult: you can not start at n = 1, because then there is no root
+nvals = seq (1.01, 10, 0.01)
+res <- sapply(nvals, findroot)
+
+df = data.frame(n = nvals, h = res)
+
+ggplot(df) +
+  geom_line(mapping = aes(x = n, y = h), color = "red") +
+  labs(title = "Plot Title",
+       x = "Horizontal label",
+       y = "Vertical label")
+
+```
+
+# Differential equation models in R
+
+## Question 1
+Question 1: Create simulations of exponential decay by setting a = −0.1. Vary the initial state of Y (e.g., use 1, 5 and 10), increase the time of the simulations as necessary and plot all solutions in the same timeplot with different colours.
+
+```{r}
+expgrowth = function(timepoint, state, parameters) {
+  with(as.list(c(state, parameters)), {
+  dY = a * Y
+  list(c(dY)) })
+}
+
+pars = c(a = -0.1)
+inistate1 = c(Y = 1)
+inistate2 = c(Y = 5)
+inistate3 = c(Y = 10)
+
+tseq = seq(0, 100, by = 0.1)
+
+out1 = ode(y = inistate1,
+          times = tseq,
+          func = expgrowth,
+          parms = pars)
+out2 = ode(y = inistate2,
+          times = tseq,
+          func = expgrowth,
+          parms = pars)
+out3 = ode(y = inistate3,
+          times = tseq,
+          func = expgrowth,
+          parms = pars)
+
+df1 = data.frame(out1)
+df2 = data.frame(out2)
+df3 = data.frame(out3)
+
+ggplot() +
+  geom_line(data = df1, mapping = aes(x=time, y = Y), col = "green") +
+  geom_line(data = df2, mapping = aes(x=time, y = Y), col = "blue") +
+  geom_line(data = df3, mapping = aes(x=time, y = Y), col = "red")
+```
+
+
+## Question 2
+
+Question 2: One may wish to store the final state of a simulation, i.e., the value of the variable(s) at that time point. One reason to remember it is to use it as initial state of a subsequent ODE simulation. This can be done by selecting the last row and second column of out. Store the final state of Y in a variable named finalstate using the function nrow (use the help).
+
+```{r}
+
+expgrowth = function(timepoint, state, parameters) {
+  with(as.list(c(state, parameters)), {
+  dY = a * Y
+  list(c(dY)) })
+}
+
+pars = c(a = 0.2)
+inistate = c(Y = 1)
+
+tseq = seq(0, 10, by = 0.1)
+
+out = ode(y = inistate,
+          times = tseq,
+          func = expgrowth,
+          parms = pars)
+
+df = data.frame(out)
+
+ggplot() +
+  geom_line(data = df, mapping = aes(x=time, y = Y), col = "green")
+nfinal = nrow(out)
+(tfinal = out[nfinal,1])
+(yfinal = out[nfinal,2])
+```
+
+## Question 3
+
+Question 3: The final state can also be stored by selecting the final row and removing the first column. This can be done by putting a minus in front of the column number(s) to be removed. This solution is more general because it also works in case we have a model with more than one dimension (in cases with multiple variables the first column is the time and there is one column for every variable). Try out this other form of selection and check that it gives the same result as for the previous question.
+
+```{r}
+final = out[nrow(out),-1]
+final
+```
+
+## Exercise 4
+
+Question 4: Create a simulation in which you first run exponential growth with a rate of a = 0.1 until t = 10 and subsequently continue with exponential decay at a rate of a = −0.01 until t = 100. Plot the result of these simulations in a single graph as below. Note that the plot command in deSolve allows one to plot multiple output objects in a single graph by giving them all as subsequent arguments separated by commas. As you’ll see, by default the second line that is added receives a different colour and is added as a dashed line. Modify this to a black solid line (use the help if needed).
+
+
+```{r}
+expgrowth = function(timepoint, state, parameters) {
+  with(as.list(c(state, parameters)), {
+  dY = a * Y
+  list(c(dY)) })
+}
+
+pars = c(a = 0.1)
+inistate = c(Y = 1)
+tseq = seq(0, 10, by = 0.1)
+out1 = ode(y = inistate,
+          times = tseq,
+          func = expgrowth,
+          parms = pars)
+finalstate = out[nrow(out),-1]
+
+pars = c(a = -0.01)
+inistate = finalstate
+tseq = seq(10, 100, by = 0.1)
+out2 = ode(y = inistate,
+           times = tseq,
+           func = expgrowth,
+           parms = pars)
+
+df1 = data.frame(out1)
+df2 = data.frame(out2)
+
+ggplot() +
+  geom_line(data = df1, mapping = aes(x = time, y = Y), col = "green")  +
+  geom_line(data = df2, mapping = aes(x = time, y = Y), col = "green")
+
+```
+
+## Exercise 5
+
+Try out different values of the parameter a, draw the phase portrait and determine the stability of the equilibrium. For which conditions is the equilibrium stable? Sketch a bifurcation diagram for the equilibrium as a function of a.
+
+```{r}
+pars = c(a = 1)
+phaseport = phasePortrait(expgrowth,
+                          parameters = pars,
+                          ylim = c(-2, 2),
+                          points = 10,
+                          xlab = "Y",
+                          ylab = "dY/dt",
+                          state.names = c("Y"))
+grid()
+
+pars = c(a = -1)
+phaseport = phasePortrait(expgrowth,
+                          parameters = pars,
+                          ylim = c(-2, 2),
+                          points = 10,
+                          xlab = "Y",
+                          ylab = "dY/dt",
+                          state.names = c("Y"))
+grid()
+
+# For all negative values of a, the equlibrium is stable at 0
+# For all positive values of a, the equlibrium is unstable at 0
+
+```
+
+
+
+## Question 8
+Question 8: Simulate time plots of the model for the two possible behaviours of the model. Also generate
+phase portraits for all qualitatively different behaviours of the model. Describe in biological terms what
+happens in both possible cases.
+
+```{r}
+
+
+
+genereg = function(timepoint, state, parameters) {
+  with (as.list(c(state, parameters)), {
+    dx = b + k1*x - k2*x  # Function definition
+    list(c(dx))
+  })
+}
+pars1 = c(b = 2, k1 = 0.5, k2 = 0.1)
+pars2 = c(b = 2, k1 = 0.5, k2 = 0.1)
+
+inistate1 = c(x = 1)
+genereg = function(timepoint, state, parameters) {
+  with (as.list(c(state, parameters)), {
+    dx = b + k1*x - k2*x  # Function definition
+    list(c(dx))
+  })
+}
+pars1 = c(b = 2, k1 = 0.5, k2 = 0.45)
+pars2 = c(b = 2, k1 = 0.5, k2 = 0.7)
+
+inistate = c(x = 1)
+inistate2 = c(x = 20)
+time_series = seq(0, 20, by = 0.1)
+
+out1 = ode(y = inistate,
+           times = time_series,
+           func = genereg,
+           parms = pars1)
+
+out2 = ode(y = inistate,
+           times = time_series,
+           func = genereg,
+           parms = pars2)
+
+df1 = data.frame(out1)
+df2 = data.frame(out2)
+
+ggplot() +
+  geom_line(data = df1, mapping = aes(x=time, y = x)) +
+  geom_line(data = df2, mapping = aes(x=time, y = x), col = 'red', linetype='dashed') +
+  scale_y_continuous(breaks=seq(0, 60, 10))
+
+
+# Further investigate if the negative a goes to an asymptote
+# Indeed it does, it goes to 10
+inistate = c(x = 1)
+time_series = seq(0, 100, by = 1)
+
+out2 = ode(y = inistate,
+           times = time_series,
+           func = genereg,
+           parms = pars2)
+
+df2 = data.frame(out2)
+
+ggplot() +
+  geom_line(data = df2, mapping = aes(x=time, y = x), col = 'red', linetype='dashed')
+
+time_series = seq(0, 20, by = 0.1)
+
+out1 = ode(y = inistate,
+           times = time_series,
+           func = genereg,
+           parms = pars1)
+
+out2 = ode(y = inistate,
+           times = time_series,
+           func = genereg,
+           parms = pars2)
+
+df1 = data.frame(out1)
+df2 = data.frame(out2)
+
+ggplot() +
+  geom_line(data = df1, mapping = aes(x=time, y = x)) +
+  geom_line(data = df2, mapping = aes(x=time, y = x), col = 'red', linetype='dashed') +
+  scale_y_continuous(breaks=seq(0, 60, 10))
+
+
+# Further investigate if the negative a goes to an asymptote
+# Indeed it does, it goes to 10
+inistate = c(x = 1)
+time_series = seq(0, 100, by = 1)
+
+out2 = ode(y = inistate,
+           times = time_series,
+           func = genereg,
+           parms = pars2)
+
+df2 = data.frame(out2)
+
+ggplot() +
+  geom_line(data = df2, mapping = aes(x=time, y = x), col = 'red', linetype='dashed')
+
+
+# Check stability
+
+# This crashes the system.....
+# phaseport = phasePortrait(genereg, 
+#                           parameters = pars1, 
+#                           xlab = "x", ylab = "dx/dt", 
+#                           ylim = c(0, 20), points = 10, 
+#                           state.names = c("x"))
+# phaseport = phasePortrait(genereg, 
+#                           parameters = pars2, 
+#                           xlab = "x", ylab = "dx/dt",
+#                           ylim = c(-100, 100), 
+#                           points = 10, 
+#                           state.names = c("x")) 
+```
+
+
+## Question 11
+
+Question 11: Simulate the dynamics of the modified model for the following parameter values: b = 5, k1 = 0.5 and k2 = 0.1. Use various initial conditions and plot these simulations in the same graph. Describe the behaviour of the model in biological terms.
+
+```{r}
+genereg2 = function(timepoint, state, parameters) {
+  with (as.list(c(state, parameters)), {
+    dx = b + k1*x - k2*x^2  # Function definition
+    list(c(dx))
+  })
+}
+pars = c(b = 5, k1 = 0.5, k2 = 0.1)
+
+
+inistate1 = c(x = 1)
+inistate2 = c(x = 20)
+
+time_series = seq(0, 20, by = 0.1)
+
+out1 = ode(y = inistate1,
+           times = time_series,
+           func = genereg2,
+           parms = pars)
+
+out2 = ode(y = inistate2,
+           times = time_series,
+           func = genereg2,
+           parms = pars)
+
+df1 = data.frame(out1)
+df2 = data.frame(out2)
+
+ggplot() +
+  geom_line(data = df1, mapping = aes(x=time, y = x)) +
+  geom_line(data = df2, mapping = aes(x=time, y = x), col = 'red', linetype='dashed') +
+  scale_y_continuous(breaks=seq(0, 60, 10))
+
+
+# Further investigate if the negative a goes to an asymptote
+# Indeed it does, it goes to 10
+inistate = c(x = 1)
+time_series = seq(0, 100, by = 1)
+
+out2 = ode(y = inistate,
+           times = time_series,
+           func = genereg,
+           parms = pars2)
+
+df2 = data.frame(out2)
+
+ggplot() +
+  geom_line(data = df2, mapping = aes(x=time, y = x), col = 'red', linetype='dashed')
+
+```
+
+## Question 12
+
+Question 12: Generate a phase portrait. How many equilibria are there and what is their stability?
+
+```{r}
+phaseport = phasePortrait(genereg2, 
+                          parameters = pars, 
+                          ylim = c(-10, 15), 
+                          points = 10, 
+                          xlab = "X", 
+                          ylab = "dX/dt", 
+                          state.names = c("x")     
+                          ) 
+```
+# Data visualisation
+
+
+## Exercise 1
+Exercise 1: Plot the entire iris data set using the plot() function, then plot only the Sepal.Length vs Sepal.Width . And finally, plot the Species on the x-axis vs the Sepal.Length . Explain in your own
+words how the same function can create such different plots.
+
+```{r}
+plot(iris)
+
+ggplot(data=iris) +
+  geom_point(mapping=aes(x = Sepal.Length, y = Sepal.Width))
+
+ggplot(data=iris) +
+  geom_point(mapping=aes(x = Species, y = Sepal.Length))
+
+ggplot(data=iris) +
+  geom_boxplot(mapping=aes(x = Species, y = Sepal.Length))
+
+plot(iris$Species, iris$Sepal.Length)
+```
+
+
+## Exercise 2
+
+Plot the Sepal.Length on the x axis and Sepal.Width on the y axis (as before).
+Add a linear line using the abline function with intercept of 3.5 and a slope of -0.1 with a red color and and line width of 3.
+Then create a function that takes as input a vector, an intercept and a slope. The function calculates output y as the intercept + slope*input_vector . 
+Run the function with Sepal.Length as input vector, intercept 4 and slope -0.15. Add the input_vector and function output as a linear line to the plot with the lines function.
+
+```{r}
+plot(iris)
+
+x1 = seq(2, 8, 0.1)
+y1 = 3.5 - 0.1 * x1
+
+slopeline <- function(xseq, intercept, slope) {
+  intercept + slope * xseq
+}
+
+x2 = iris$Sepal.Length
+y2 = slopeline(iris$Sepal.Length, 4, -0.15)
+
+df1 = data.frame(x1, y1)
+df2 = data.frame(x2, y2)
+
+ggplot() +
+  geom_point(data=iris, mapping=aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_line(data = df1, mapping=aes(x = x1, y = y1), col = 'red') +
+  geom_line(data = df2, mapping=aes(x = x2, y = y2), col = 'blue') +
+  xlim(4, 8)
+
+
+
+```
+
+## Exercise 3:
+Plot the distribution of all 4 iris measurements in a single figure. Use the with() function for your plotting. Hint: distributions are plotted with either the hist function or plot(density())
+Solution:
+
+```{r}
+
+# Try 'with', but difficult to get it in one plot
+with (iris, {
+  ggplot() +
+    geom_density(mapping = aes(x=Sepal.Length))
+  ggplot(data = iris) +
+    geom_density(mapping = aes(x=Sepal.Width))
+  ggplot(data = iris) +
+    geom_density(mapping = aes(x=Petal.Width))
+  ggplot(data = iris) +
+    geom_density(mapping = aes(x=Petal.Length))
+}
+)
+
+
+# Here the density ployts
+p1 <- ggplot(data = iris) +
+  geom_density(mapping = aes(x=Sepal.Length))
+p2 <- ggplot(data = iris) +
+  geom_density(mapping = aes(x=Sepal.Width))
+p4 <- ggplot(data = iris) +
+  geom_density(mapping = aes(x=Petal.Width))
+p3 <- ggplot(data = iris) +
+  geom_density(mapping = aes(x=Petal.Length))
+
+gridExtra::grid.arrange(
+    p1,
+    p2,
+    p3, 
+    p4,
+    nrow = 2)
+
+# Here the histograms plots
+nbin = 10
+p1 <- ggplot(data = iris) +
+  geom_histogram(mapping = aes(x=Sepal.Length), bins = nbin, 
+                 fill = 'white', alpha = 0.3, col = 'black') 
+p2 <- ggplot(data = iris) +
+  geom_histogram(mapping = aes(x=Sepal.Width), bins = nbin,
+                 fill = 'white', alpha = 0.3, col = 'black')
+p4 <- ggplot(data = iris) +
+  geom_histogram(mapping = aes(x=Petal.Width), bins = nbin,
+                 fill = 'white', alpha = 0.3, col = 'black')
+p3 <- ggplot(data = iris) +
+  geom_histogram(mapping = aes(x=Petal.Length), bins = nbin,
+                 fill = 'white', alpha = 0.3, col = 'black')
+
+gridExtra::grid.arrange(
+    p1,
+    p2,
+    p3, 
+    p4,
+    nrow = 2)
+
+
+```
+
+## Exercise 4:
+Use ggplot to create a single graph of the ToothGrowth dataset, plot all the individual len datapoints in a dose response: dose should be on the x-axis and len on the y-axis.
+
+
+```{r}
+ToothGrowth
+
+ggplot(data = ToothGrowth) +
+  geom_point(mapping = aes(x = dose, y = len))
+```
+
+## Exercise 5:
+Modify the previous plot by mapping a color to each level of the variable/ factor supp .
+
+```{r}
+ToothGrowth
+
+ggplot(data = ToothGrowth) +
+  geom_point(mapping = aes(x = dose, y = len, color = supp)) + 
+  labs (x = "Dose", color = "Supplement ", y = "Tooth Length")
+
+ggplot(data = ToothGrowth) + 
+  geom_point(aes(x = as.factor(dose), y = len, color = supp)) + 
+  labs (x = "Dose", color = "Supplement ", y = "Tooth Length")
+```
+
+
+## Exercise 6:
+Modify the previous plot by adding linear regression ( method =lm ) to each level of supp .
+
+```{r}
+ggplot(data = ToothGrowth, mapping = aes(x = dose, y = len, color = supp)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  labs (x = "Dose", color = "Supplement ", y = "Tooth Length")
+```
+
+
+## Exercise 7:
+
+Modify the previous plot by creating seperate graphs in a single figure for both levels of supp Solution:
+
+```{r}
+ggplot(data = ToothGrowth, mapping = aes(x = dose, y = len, color = supp)) +
+  geom_point() + 
+  geom_smooth(method='lm') +
+  labs (x = "Dose", color = "Supplement ", y = "Tooth Length") +
+  facet_wrap(~ supp, nrow = 1)
+```
+
+## Exercise 8:
+Change the previous figure to boxplots for each dose level where each dose level has it’ s own color and the supp in it’s own facet (two boxplot graphs in 1 figure).
+
+```{r}
+ggplot(data = ToothGrowth, 
+       mapping = aes(x = as.factor(dose), y = len, color = as.factor(dose)))  +
+  geom_boxplot(mapping=aes()) + 
+
+  labs (x = "Dose", color = "Supplement ", y = "Tooth Length") +
+  facet_wrap(~ supp, nrow = 1)
+```
+
+
+## Exercise 9 (Need to check)
+Plot the distributions using geom_density() of all the numeric variables of the midwest dataset in a single figure using ggplot, each variable should be plotted in it’s own subplot/graph, assign a color to each different state. Make sure the different state densities are visible. Use free scales.
+
+hint: to gather the numeric columns you need their names, you can find these using
+names(midwest %>% select_if(is.numeric))
+
+
+n_names = names(midwest %>% select_if(is.numeric))
+gather(midwest,... = n_names)
+
+ggplot(data = midwest) +
+  geom_density(mapping = aes(x = displ, y = hwy)) +
+  facet_wrap(~ n_names)
+
+midwest %>%
+gather(... = names(midwest %>% select_if(is.numeric))) %>% 
+  ggplot() +
+  geom_density(aes(value, color = state)) +
+  facet_wrap(~ key, scales = "free")
+ 
+
+
+# Data wrangling 
+
+
+## Exercise 1
+
+In which 2 ways is the result different from cw_l and why?
+
+```{r}
+# You need to make it a tibble first!
+cw_long <- as_tibble(ChickWeight)
+
+# You want to split out the time values as columns, with the value in weight interprated 
+# as the data
+
+glimpse (cw_long)
+cw_wide <- spread(data = cw_long, key = 'Time', value = 'weight' )
+glimpse (cw_wide)
+
+# You can convert back with gather
+# You have to specify:
+#   the columns you want to gather '0'..'21'
+#   the name pd the new columns: key = 'New Col'
+
+cw_long_new =  gather(cw_wide, key = 'Time', value = 'weight', ... = c('0':'21'))
+glimpse(cw_long_new)
+glimpse(cw_long)
+
+```
+The result contains extra rows because of the NA values in the wide format, and the Time column is of type character instead of numeric because column names are character by default.
+
+
+
+## Exercise 2
+
+Is iris tidy and why? Is iris long or wide?
+
+```{r}
+glimpse (iris)
+head(iris)
+```
+
+iris is tidy, since it satisfies the 3 rules. However it could be argued that it could be longer. This is mainly because you can argue that 1 observation doesn’t necessarily equal 1 value
+
+
+## Exercise 3: 
+
+As it turns out, although iris can be considered tidy, it is possible to make iris longer. Reformat the data to this longer format, one value per row. Store the result in the variable iris_longer . What are the dimensions of the original iris and the “longer” data?
+
+```{r}
+iris_longer <- gather(data=as.tibble(iris),
+                      ... = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
+                      key = 'Variable', value = 'Measurement')
+  
+head(iris_longer)
+dim(iris)
+dim(iris_longer)
+```
+
+## Exercise 4: 
+
+Why is it not possible to recreate the original format using the iris_longer tbl? (Hint: try it!)
+Solution:Because there is no unique identifier for each plant specific measurement set.
+
+```{r}
+#spread(data=iris_longer, key = 'Variable', value = 'Measurement')
+```
+
+## Exercise 5: 
+Modify the original iris in such a way that the long format could be reformatted back to the wide format (Hint: use ?rowid_to_column ). Recreate the iris_longer table using this modified iris table, then recreate the original wide format and store it in a variable named iris_wide .
+
+```{r}
+
+# First create a new copy that has rowids
+new_iris <- as_tibble(iris)
+new_iris <- rowid_to_column(new_iris, var = 'Id')
+head(new_iris)
+
+# If you now gather, the rowid comes is maintained
+iris_longer <- gather(data = as.tibble(new_iris),
+                      ...  = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
+                      key  = 'Variable', value = 'Measurement')
+head(iris_longer)
+
+# If you subsequently spread, the rowid can be used to restore the records
+
+iris_wide <- spread(data = iris_longer, 
+                    key = 'Variable', 
+                    value = 'Measurement')
+
+# Check if this is correct
+
+filter(new_iris, Species == 'setosa' )
+filter(iris_wide, Species == 'setosa' )
+
+```
+
+
+## Exercise 6: 
+
+Is iris_longer tidy (remember the 3 criteria)? Can you make it even more tidy using the separate function? (there is also a unite function, which does the opposite of separate )
+Solution: it could be argued that key contains 2 values instead of 1
+
+```{r}
+glimpse(iris_longer)
+head(iris_longer)
+
+separate(iris_longer, col = 'Variable', into = c('A','B'), sep = "[.]")
+```
+
+## Exercise 7: 
+It’s possible that the columns and column order of iris_wide doesn’t match the original iris . Can you make the them match?
+
+```{r}
+glimpse(iris)
+glimpse(iris_wide)
+
+head(iris)
+head(iris_wide)
+
+names(iris)
+names(iris_wide)
+
+iris_new_wide <- select(iris_wide[-1], 
+                        Sepal.Length, Sepal.Width, Petal.Length, Petal.Width, Species)
+```
+
+
+## Exercise 8: 
+Show the flowers of species setosa that have Sepal.Length bigger than 5.0 (use whichever data set you like)
+
+```{r}
+head(iris_new_wide)
+dim(iris_new_wide)
+n = filter(iris_new_wide, Species == 'setosa' & Sepal.Length > 5)
+dim(n)
+
+head(iris_longer)
+dim(iris_longer)
+n = filter(iris_longer, Species == 'setosa' & Variable == "Sepal.Length" & Measurement > 5)
+dim(n)
+```
+
+## Exercise 9: 
+Sometimes you want to filter for multiple species. For this you can use the %in% operator. Can you filter iris to show setosa and versicolor ?
+
+```{r}
+head(iris_new_wide)
+dim(iris_new_wide)
+n = filter(iris_new_wide, (Species == 'setosa' | Species == 'versicolor') & Sepal.Length > 5)
+dim(n)
+
+n = filter(iris_new_wide, Species %in% c('setosa', 'versicolor') & Sepal.Length > 5)
+dim(n)
+
+```
+
+## Exercise 10: 
+Calculate the average of each measurement per Species , do this first for iris_wide then for iris_longer . Which is more convenient?
+
+```{r}
+head(iris_wide)
+
+iris_wide %>%
+	group_by(Species) %>%
+	summarise(mean_pl = mean(Petal.Length),
+	          mean_pw = mean(Petal.Width),
+	          mean_sl = mean(Sepal.Length),
+	          mean_sw = mean(Sepal.Width))
+
+head(iris_longer)
+iris_longer %>%
+	group_by(Species, Variable) %>%
+	summarise(mean_run = mean(Measurement))
+```
+
+# Exercise 11: 
+
+Can you filter the iris dataset to keep the flowers that have a larger Sepal.Length than the average of their species? (Hint: You don’t need summarize!)
+
+```{r}
+iris_wide %>% 
+  group_by(Species) %>%
+  filter(Sepal.Length > mean(Sepal.Length))
+#filter(iris, Sepal.Length > mean(Sepal.Length))
+```
+
+
+# Exercise 12: 
+From the previous question, how many flowers are in each group? Use n() , tally() or count() . Do you need the group_by again?
+
+```{r}
+iris_wide %>% 
+  group_by(Species) %>%
+  filter(Sepal.Length > mean(Sepal.Length)) %>% summarise(n= n())
+```
+
+# Exercise 13: 
+Find all flights from the “Envoy Air” airline. Write 3 different solutions using left_join , right_join , and semi_join .
+
+```{r}
+head(flights)
+head(airlines)
+dim(flights)
+dim(airlines)
+
+# Find all the flights for which the name Envoy Air can be found 
+lj = left_join(flights, airlines) %>%
+  filter(name == "Envoy Air")
+dim(lj)
+
+# This is exactly the same
+rj = right_join(airlines, flights) %>%
+  filter(name == "Envoy Air")
+dim(rj)
+
+la = filter(airlines, name =="Envoy Air" ) 
+sj1 = semi_join(flights, la, by = 'carrier') 
+dim(sj1)
+
+#or
+
+sj2 <- flights %>% semi_join(filter(airlines, name == "Envoy Air"))
+dim(sj2)
+
+```
+Exercise 14: 
+What does it mean for a flight to have a missing tailnum? What do the tail numbers that don’t have a matching record in planes have in common? (Hint: one variable explains ~90% of the problems. Hint2: If you get nonsense results, is your join using the right by ?)
+
+```{r}
+head(planes)
+dim(planes)
+
+flights %>% anti_join(planes, by = 'tailnum')
+
+flights %>% 
+  anti_join(planes, by = 'tailnum') %>% 
+  group_by(carrier) %>% 
+  summarise(n=n()) %>% 
+  arrange(desc(n))
+
+```
 
