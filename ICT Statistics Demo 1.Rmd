@@ -7,7 +7,7 @@ output:
 ---
 
 
-# Quantifying uncertainty 
+# Constructing normal distributions 
 
 ```{r}
 
@@ -20,22 +20,52 @@ rnorm(2, mean = 5, sd = 200)
 
 # Generate 100000 samples
 # Specifying the seed ensures repeatability  
-set.seed(123)
-x <-rnorm(100000, mean = 12, sd = 2)
+# If you set the seed you get a reoproducile effect. DOn't di it for now
+# set.seed(123)
+x1 <-rnorm(10, mean = 12, sd = 2)
+x2 <-rnorm(100, mean = 12, sd = 2)
+x3 <-rnorm(1000, mean = 12, sd = 2)
+x4 <-rnorm(10000, mean = 12, sd = 2)
+x5 <-rnorm(100000, mean = 12, sd = 2)
+x6 <-rnorm(1000000, mean = 12, sd = 2)
+x7 <-rnorm(10000000, mean = 12, sd = 2)
+x8 <-rnorm(1000000, mean = 12, sd = 2)
 
 # Plot density distribution of the 100000 points
 # Creating a 'theoretical' normal curve 
+# With more points it becines perfect
+
+par(mfrow=c(3,3))
+plot(density(x1))
+plot(density(x2))
+plot(density(x3))
+plot(density(x4))
+plot(density(x5))
+plot(density(x6))
+plot(density(x7))
+plot(density(x8))
+par(mfrow=c(1,1))
+
+```
+
+# Example of sampling size
+
+```{r Example ofsampling size }
+
+x <-rnorm(1000000, mean = 12, sd = 2)
 plot(density(x))
 
-# Now draw a sample of 3 points somewhere from the 100000 points 
-x_s <- sample(x, 3) 
+n = 5
+x_s <- sample(x, n) 
+
 
 # Plot the samples.
 # The x values are the sample, the y values are set to 0.01
 # Points are drawn as blue diamonds
 
+
 points(x = x_s, 
-       y = rep(0.01, 3), 
+       y = rep(0.01, n), 
        col = "blue", 
        pch = 5, 
        cex = 2)
@@ -43,79 +73,121 @@ points(x = x_s,
 # Draw blue dotted vertical lines at the sample points 
 abline(v = x_s, col = 'blue', lwd = 2 , lty = 2)
 
-# Draw a red solid vertical line at the mean
+# Draw a red solid vertical line at the mean of the sample
 abline(v = mean(x_s), col = 'red', lwd = 4 , lty = 1)
 
 # Draw two red vertical dotted lines at mu - 2*sd and mu + 2*sd
 abline(v = c(mean(x_s)-2*sd(x_s), mean(x_s)+2*sd(x_s)), 
        col = 'red', lwd = 1 , lty = 2)
+```
+# Cumulative sampling
 
+
+Note: ecdf (Empirical Cumulative Distribution Function)
+
+Compute an empirical cumulative distribution function, with several methods for plotting, printing and computing with such an “ecdf” object.
+
+```{r Cumulative sampling}
 
 # Now draw 100 samples
 # Calculate the difference between these samples of 3
-# Calculate the difference between tge meand and the true mean
+# Calculate the difference between the sample mean and the population true mean
 
+x <-rnorm(1000000, mean = 12, sd = 2)
+population_mean = mean(x)
+
+sample_size = 3
 result_list = alist()
 for (i in 1:100) {
-  x_s <- sample(x, 3) # sample from our x
-    result_list[[i]] <- abs( mean(x_s)-mean(x) )  
+  x_s <- sample(x, sample_size) # sample from our x
+    sample_mean = mean(x_s)
+    result_list[[i]] <- abs(sample_mean - population_mean)  
 }
 
 # The density distribution of these mean differences is approximateky normal
-# The cex parameter sets the size of the font 
+# The cex parameter sets the size of the font
+title = paste("Distribution of sample of -", sample_size, " - mean deviations from true mean")
 plot(density(unlist(result_list)), 
-     main = "Distribution of 3-sample mean deviations from true mean",
+     main = title,
      cex.main = 0.7)
 
-# The emperical cumulative distrubution curve 
+s = seq(-1, 5, 0.25)
+plot(hist(unlist(result_list),breaks=c(s)), 
+     main = title,
+     cex.main = 0.7)
+
+# The emperical cumulative distrubution curve takes the density data and plots it cumulative
 # Draw a vertical line at 1 ad a horizontal line at 0.65
-plot(ecdf(unlist(result_list)), cex.main = 0.7, cex= 0.5)
+plot(ecdf(unlist(result_list)), 
+     main = "Cumulative plot of mean",
+     cex.main = 0.7, 
+     cex = 0.5)
 abline(h = 0.65, v = 1, col = 'blue')
 
 ```
 
-## SEM
+## Sample Error of Mean
 
-```{r}
+```{r Sample Error of Mean}
 sample_size <- 3
-nsamples <- 1000
 
-# Generate 'sample_size * nsamples' and put themm in a matrix
-# In fact you generate 1000 samples of size 3 
-sim_data <- matrix(rnorm(nsamples * sample_size, 12, 2), nsamples)
-head(sim_data)
+# If you take the number of experiments high, you get a nice approximation of the normal
+# distribution (i.e. the histogram will resemble the curve)
+
+repeat_experiment <- 10000     
+
+# Generate 'sample_size * repeat_experiment' and put them in a matrix
+
+population_sd = 2
+population_mean = 12
+
+sample_data <- matrix(rnorm(repeat_experiment * sample_size,  # number of sample
+                            population_mean,                  # mean
+                            population_sd),                   # sd   
+                      repeat_experiment)
+head(sample_data)
+dim(sample_data)
 
 # Of each sample calculate the mean.
 # Plot these points in a histogram
-sim_data_means <- rowMeans(sim_data)
-head(sim_data_means)
-hist(sim_data_means, freq = F)
+sample_data_means <- rowMeans(sample_data)
+head(sample_data_means)
+hist(sample_data_means, freq = F)
 
-# Overlay it with a 'theoretical' normal distriubution
-abline(v = 12, col = 'red', lwd=4)
-x <-rnorm(100000, mean = 12, sd = 2 / sqrt(sample_size))
+# Overlay it with a 'theoretical' normal distriubution, use a high repeat to get a 
+# perfect curve
+abline(v = population_mean, col = 'red', lwd=4)
+x <-rnorm(1000000, mean = 12, sd = population_sd / sqrt(sample_size))
 lines(density(x))
 
-sd(sim_data_means)
+sd(sample_data_means)
 sem = 2 / sqrt(sample_size)
 sem
 ```
 
-# ECDF & quantiles
+# Manual ECDF from quantiles
 
 
-```{r}
+```{r Manual ECDF}
 
 n = 1000
 
 # Creat a dataframe with 1 column with 1000 normal samples
 # The samples are sorted
-showQuantiles <- data.frame(rnorm = sort(rnorm(n)))
+
+ndist = sort(rnorm(n))
+showQuantiles <- data.frame(rnorm = ndist)
 
 # Add a column to the dataframe
-# The column contains a seq of 1000 points divided by 1 and rounded to 2 
-showQuantiles$quantile <- round(seq(0, 1, length.out = nrow(showQuantiles)), 
+# The column contains a seq of 1000 points divided by 1 and rounded to 2 decimals 
+# Simply by refering to a non-existent colums name you create it
+
+showQuantiles$quantile <- round(seq(0,
+                                    1, 
+                                    length.out = nrow(showQuantiles)), 
                                 digits = 2)
+
+# You get a bunch of points with 0, a bunch of points at 0.01, at 0.02 etc 
 
 # The curve is plotted
 plot(x = showQuantiles$quantile, 
@@ -123,10 +195,13 @@ plot(x = showQuantiles$quantile,
      main = paste0("n = ", n ))
 
 
-# The ECDF (Empirical Cumulative Distribution Function) is constructed by swapping the axes 
+# The Cumulative Distribution Function is constructed by swapping the axes 
 plot(y = showQuantiles$quantile, 
      x = showQuantiles$rnorm, 
      main = paste(paste0("n = ", n ), "ECDF"))
+
+# Would have been easier to use the ecdf function
+plot(ecdf(ndist))
 
 
 ```
@@ -136,44 +211,84 @@ plot(y = showQuantiles$quantile,
 
 # Confidence intervals
 
-```{r}
+```{r Confidence intervals}
 
-# Formula for CI = mu +- q(a) * SE
-# Probably you have seen mean +- 1.96 + SEM? That is the Z quantile for CL = 5%
+# Formula for Confidence Interval = mu +- q(a) * SEM
+# Probably you have seen 'mean +- 1.96 + SEM'? That is the Z quantile for CL = 5%
 
 qnorm(0.975)
 
-# Generate 100 samples with mu = 12 and sd 2
-x_s <- rnorm(100, 12, 2)
+# Generate 100 samples with specified mu and sd
+# Normally speaking you do not know the population distribution. This is just for reference. 
+n_sample = 100
+pop_mean = 12
+pop_sd = 2
 
-# Calculate the mean and sd of that 100 values
-s_mean <- mean(x_s)
-s_sd <- sd(x_s)
-n = length(x_s) 
+# Take the samples and calculate the mean, sd and sem
+x_s <- rnorm(n_sample, pop_mean, pop_sd)
+sample_mean <- mean(x_s)
+sample_sd <- sd(x_s)
+sem = sample_sd / sqrt(n_sample)
 
-# Formula for confidence limit
-ci <- qt(0.975, df = n - 1) * s_sd/sqrt(n) 
-ci
+# For fun, calculate mean and SD yourself to check
+sn = length(x_s)
+sm = sum(x_s) / sn
+sd = sqrt(sum((sample - sm)^2) / (sn - 1))
 
-# Create a boxplot for the samples 
-boxplot(x_s, ylim = c(5,25))
 
-# Draw in red lines for the confidence interval
-abline(h = c(s_mean - ci,  s_mean + ci), col = 'red', lty=2)
+# Formula for confidence interval of 0.95
+# The formula to calulate the quartile you need is 0.95 + (1 - 0.95) / 2
+# With that new number you get the single sided quantile that leaves a right tail that is half 
+# of what you need. 
+# But then you need it left and right.........
+dq = 0.95
+q_to_use = dq + (1 - dq) / 2 
 
-# And blue lines for the mean +/- sd
-abline(h = c(s_mean - s_sd, s_mean + s_sd), col = 'blue', lty=2)
+if (n_sample < 30) {  # Use the 'T' distrubution
+  ci <- qt(q_to_use, df = n_sample - 1) * sem 
+} else {              # Use the normal distrubution
+  ci <- qnorm(q_to_use, sample_mean, sample_sd) * sem 
+}
+
+# Create a boxplot for the samples using base R
+# boxplot(x_s, ylim = c(5,25))
+# abline(h = c(sample_mean - ci,  sample_mean + ci), col = 'red', lty=2)
+# abline(h = c(sample_mean - sample_sd, sample_mean + sample_sd), col = 'blue', lty=2)
+
+# Create a boxplot for the samples using ggplot
+ggplot(data = data.frame(sample = x_s)) +
+  geom_boxplot(mapping = aes(y=sample)) +
+  ylim(5, 25) +
+  theme(axis.text.x = element_blank()) +
+  geom_hline(yintercept = c(sample_mean - ci, sample_mean + ci), 
+             col= 'red', 
+             linetype = 'dashed') +
+  geom_hline(yintercept = c(sample_mean - sample_sd, sample_mean + sample_sd), 
+             col = 'blue', 
+             linetype = 'dashed')
 
 ```
 
 
+
+
 # Central limit theorem
 
-```{r}
-n=100
-replicate(3,hist(runif(n), cex.main = 0.8))
-hist(colMeans(replicate(1000, runif(n))), cex.main = 0.8)
+```{r Central limit theorem}
 
+# Generate a 100 sample normal sample distribution, three times 
+n = 100
+replicate(3, hist(runif(n), cex.main = 0.8))
+
+# Repeat a 100 sample, 1000 times
+# Every column is one sample
+sample_set = replicate(1000, runif(n)) 
+
+# Take the means of each of the 1000 samples
+means = colMeans(sample_set)
+
+# Plot that as a hist=ogram
+hist(means, cex.main = 0.8)
 ```
 
 
@@ -182,12 +297,18 @@ hist(colMeans(replicate(1000, runif(n))), cex.main = 0.8)
 ## Bootstrapping
 
 ```{r}
-n=5
-x <- runif(n, min = 5, max = 6) # single random sample.
+# Create a sample of 5 numbers, values between 5 and 6
+n = 5
+x <- runif(n, min = 5, max = 6)  
+
+# Plot the one sample
+hist(x, main = "one sample", cex.main = 0.8)
+
+# From the sample, select 5 times a number
+# We replace, so you may find in a set of 5 the same numbers multiple times
+# Do this experiment 1000 times
 b <- replicate(10000, mean(sample(x, replace=TRUE)))
 
-
-hist(x, main ="one sample", cex.main = 0.8)
 
 hist(replicate(10000, runif(n, min = 5, max =6)), 
      main = "uniform distribution", cex.main = 0.8)
@@ -203,32 +324,53 @@ abline(v = qb)
 
 
 
-# Testing for normality- transformations
+# Testing for normality-transformations
 
+The null-hypothesis of this test is that the population is normally distributed. Thus, on the one hand, if the p value is less than the chosen alpha level, then the null hypothesis is rejected and there is evidence that the data tested are not normally distributed. On the other hand, if the p value is greater than the chosen alpha level, then the null hypothesis that the data came from a normally distributed population can not be rejected (e.g., for an alpha level of .05, a data set with a p value of less than .05 rejects the null hypothesis that the data are from a normally distributed population)
 
-```{r}
+```{r Shapiro Test}
 
-# A uniform distribution is not expected to meet the shapiro test 
+# A uniform distribution is not expected to meet the shapiro test and generates 
+# a very low p value
 hist(runif(10000))
 shapiro.test(runif(1000))
 
-
+# A uniform distribution is not expected to meet the shapiro test and generates 
+# a high p value
 hist(rnorm(10000))
 shapiro.test(rnorm(1000))
-
 
 ```
 
 # Log FC transformation
 
-```{r}
+```{r Log transformation}
+# Generate a data set with a lot of values between 0 and 1, but also with values larger than 1
 my_data <- data.frame(gene = 0.1 + runif(10000), 
-control = 0.1 +runif(10000))
-my_data$fold_change <- my_data$gene/my_data$control
-hist(my_data$fold_change)
-abline(v=1, col = 'red', lwd=2)
+                      control = 0.1 + runif(10000))
+my_data$fold_change <- my_data$gene / my_data$control
 
+# If you plot it in a normal histogram, it is not so easy to inspect because the high numbers
+# determine the scale
+hist(my_data$fold_change)
+abline(v = 1, col = 'red', lwd=2)
+
+# If you take a log of the data tham the high numbers become a lot smaller
 hist(log2(my_data$fold_change))
-abline(v=0, col = 'red', lwd=2)
+abline(v = 0, col = 'red', lwd=2)
+```
+
+# Standard Normal
+```{r Standard normal}
+
+sample = rnorm(1000, 12, 2)
+sample_mean = mean(sample)
+sample_sd = sd(sample)
+par(mfrow=c(1,2))
+hist(sample, cex.main = 0.8)
+hist((sample - sample_mean) / sample_sd, cex.main = 0.8)
+par(mfrow=c(1,1))
+
+
 ```
 

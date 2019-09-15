@@ -18,7 +18,9 @@ p_load(tidyverse, cowplot, pracma, modelr)
 theme_set(theme_minimal(base_size = 13))
 ```
 
-# utility functions
+
+# Utility functions
+
 ```{r}
 dnorm_gg <- function(mean = 0, sd = 1, xaround = 5 * sd) {
   ggplot(data = tibble(x = mean + c(-xaround,xaround)), aes(x)) +
@@ -29,6 +31,7 @@ dnorm_gg <- function(mean = 0, sd = 1, xaround = 5 * sd) {
         panel.grid.minor.x= element_blank()) +
   geom_vline(xintercept = mean)
 }
+
 dt_gg <- function(df) {
   ggplot(data = tibble(x = c(-6,6)), aes(x)) +
   stat_function(fun = dt, n = 101, args = list(df = df)) + ylab("") +
@@ -38,73 +41,128 @@ dt_gg <- function(df) {
         panel.grid.minor.x= element_blank()) +
   geom_vline(xintercept = 0)
 }
+
+std_err <- function(sample) {
+  sd(sample) / sqrt(length(sample)) 
+} 
 ```
 
 # t-test
 
 ## one sample
 
-### manual
+### Manual
 
-```{r}
-(p <- dnorm_gg(12,2))
+```{r Manual test}
+# Prepare a  normal distribution plot
+p <- dnorm_gg(12, 2)
+p
 
-(sample <- rnorm(100, 12.5, 2))
+# Take a randon sample of 100 
+sample      <- rnorm(100, 12.5, 2)
 
-(mu <- mean(sample))
-sd(sample)
+# Determine the mean, sd and sem
+sample_mean <- mean(sample)
+sample_sd   <- sd(sample)
+sample_sem  <- sd(sample) / sqrt(length(sample))
 
-(sem <- sd(sample) / sqrt(length(sample)))
+# The plot looks the same but the spread is much less because you use the SEM
+# Draw in that plot the mean of the sample
+p <- dnorm_gg(12, sample_sem) + 
+  geom_vline(xintercept = sample_mean, color = "blue")
+p
 
-(p <- dnorm_gg(12, sem))
-(p <- p + geom_vline(xintercept = mu, color = "blue"))
+# Calculate where cut-off should be for the 95% interval
+cutoff <- qnorm(0.975, mean = 12, sd = sample_sem)
 
-(cutoff <- qnorm(0.975, mean = 12, sd = sem))
+p <- p + geom_vline(xintercept = cutoff, color = "red")
+p
 
-(p <- p + geom_vline(xintercept = cutoff, color = "red"))
+# If the blue line (the measured value) lies to the right of the red one (the limit) you
+# reject the nukl hypothesis: given the mean that you find the population distribution cannit
+# have been rnorm(100, 12, 2)
 ```
 
-### manual using z-scores
 
-```{r}
-(zscore = (mu - 12) / std_err(sample))
+
+### Normalised, manual using z-scores
+
+```{r Normalised, manual using z-scores}
+
+# You can use 12 here, because that was a number in the H0 hypothesis 
+sem = std_err(sample)
+(zscore = (sample_mean - 12) / std_err(sample))
 (cl95 <- qnorm(0.975))
 
-(p <- dnorm_gg())
-(p <- p + geom_vline(aes(xintercept = x), data = tibble(x =c(-cl95, cl95)), color = "red"))
-p + geom_vline(xintercept = zscore, color = "blue")
+p <- dnorm_gg()
+p <- p + geom_vline(aes(xintercept = x), data = tibble(x = c(-cl95, cl95)), color = "red")
+p <- p + geom_vline(xintercept = zscore, color = "blue")
+p
 ```
 
-### manual using t-values
+
+### Manual using t-values
 
 ```{r}
-(sample <- rnorm(16, 13.5, 2))
+
+# Generate a 16 sample set and plot it. Because you have so few values you get a unusual shape,
+# much different than a normal distribution
+sample <- rnorm(16, 13.5, 2)
 
 ggplot(tibble(x = sample), aes(x)) + 
   geom_density() + geom_vline(xintercept = 12, color = "red")
 
-(mu <- mean(sample))
-sd(sample)
 
-df = length(sample)-1
+mu <- mean(sample)
+sd <- sd(sample)
+degree_freedom = length(sample)-1
+sem <- std_err(sample)
 
-(tvalue = (mu - 12) / std_err(sample))
-(clim = qt(.975, df = df))
-mu + c(-clim, clim) * std_err(sample)
+# Calculate the normalised tvalue 
+tvalue = (mu - 12) / std_err(sample)
 
-2 * pt(-abs(tvalue), df = df) # -abs(tvalue) to get lower tail
+# Calculate the limit for 95% confidence (compare to the 1.96 you woukd have found for normal)
+clim = qt(.975, df = degree_freedom )
 
-(p <- dt_gg(df = df))
-(p <- dnorm_gg())
+# And compare the two
+if (tvalue > clim) {
+  cat ("Reject null hypothese, because tvalue ", tvalue, "is larger than limit", clim)
+} else {
+   cat ("Accept null hypothese, because tvalue ", tvalue, "is smaller than limit", clim)
+}
+
+2 * pt(-abs(tvalue), df = degree_freedom) # -abs(tvalue) to get lower tail
+
+(p <- dt_gg(df = degree_freedom))
 (p <- p + geom_vline(aes(xintercept = x), data = tibble(x =c(-clim, clim)), color = "red"))
 p + geom_vline(xintercept = tvalue, color = "blue")
+
+# Some data as reference  for the following chun=k
+mu
+mu + c(-clim, clim) * std_err(sample)
+sem
+degree_freedom
 ```
 
-### using t.test 
 
-```{r}
-t.test(sample, mu = 12, conf.level = 0.95)
+
+### Using t.test 
+
+```{r Using t.test}
+
+# The T test gives exactly the same information
+
+t <- t.test(sample, mu = 12, conf.level = 0.95)
+t
+t$estimate
+t$conf.int
+t$stderr
+t$parameter
+t$p.value
+
+#View(t)
 ```
+
 
 ## simulation
 
@@ -154,6 +212,7 @@ abline(v = t_value)
 
 
 ```
+
 
 # shape of t distribution
 
