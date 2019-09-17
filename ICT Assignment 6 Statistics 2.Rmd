@@ -23,7 +23,7 @@ You consider if the data would provide a suggestion otherwise.
 The p value gives the change that this data might have occurred with a confidence of 0.95
 A lower p value leads to rejecting the H0 hypothes.
 
-The differen of pairing @@@@@@
+The effect of pairing needs still to be explored @@@@@@
 
 ```{r}
 sleep
@@ -35,6 +35,8 @@ t.test(data = sleep, extra ~ group, alternative = 'two.sided', paired = TRUE)
 ## Exercise 2
 
 ```{r}
+
+sleep
 # Old style plotting
 plot(extra ~ group, data = sleep)
 
@@ -46,7 +48,7 @@ ggplot(sleep, aes(group, extra)) +
   geom_boxplot() +
   geom_point()
 
-#This plot shows the paired measurements nicely
+# This plot shows the paired measurements nicely (geom_path)
 ggplot(data = sleep, 
        mapping = aes(x = group, y = extra, color = ID)) + 
     geom_point() +
@@ -142,7 +144,7 @@ plot(an1, which=6)
 ```
 
 
-# Exercise 4
+# Exercise 4 as done in workshop
 
 ```{r}
 
@@ -247,7 +249,6 @@ summary(chicken_model_both)
 chicken_model_full <- lm(weight ~ Time * Diet, data = ChickWeight)
 summary(chicken_model_full)
 
-
 # Do anova comparison, this works only for comparing increasingly complex models
 # You cannot compare two completelt different models (such as Time and Diet) 
 anova(chicken_model_Diet, chicken_model_Time)
@@ -256,13 +257,22 @@ anova(chicken_model_Diet, chicken_model_Time)
 anova(chicken_model_Time, chicken_model_both)
 anova(chicken_model_both, chicken_model_full)
 
-# COntinue
+# Continue
 new_data <- data.frame(Time = rep(c(50,100,150,365), 4), 
                        Diet = rep(as.factor(1:4), each = 4))
-predict(chicken_model_both, newdata = new_data)
 
+# You can do predict and then it it to the dataframe 
+predict(chicken_model_both, newdata = new_data)
 new_data$Weight <- predict(chicken_model_full, newdata = new_data) 
 new_data
+
+# But this is the same 
+new_data_1 <- data.frame(Time = rep(c(50,100,150,365), 4), 
+                         Diet = rep(as.factor(1:4), each = 4))
+add_predictions(new_data_1, chicken_model_full, var = "Call it weight")
+
+# This is just a different method to generate newdata
+# The effect is the same really as above
 
 grid <- ChickWeight %>%
   data_grid(Diet) %>%
@@ -270,22 +280,66 @@ grid <- ChickWeight %>%
   add_predictions(chicken_model_full, var = "weight")
 grid
 
-ggplot(data = grid, aes( x = Time, y = weight, color = Diet)) +
-  geom_point() + geom_line() + theme_minimal()
+ggplot(data = grid, aes(x = Time, y = weight, color = Diet)) +
+  geom_point() + 
+  geom_line() + 
+  theme_minimal()
 
 ```
-
 
 
 # Exercise 5
 
+Use ggplot to plot the chicken growth curves, color the diet. Add a regression line for each diet group. Comment on the results of the previous question using this figure. What is our data missing about the growth of chickens (especially at 365 days)
+
 ```{r}
+glimpse(ChickWeight)
 (p <- ggplot(data = ChickWeight, aes(x = Time, y = weight, color = Diet)) + 
    geom_point() + 
    geom_smooth(aes(group = Diet), se = F) + 
    theme_minimal())
+
+# Add the predicted data, but because it is so far out, you stop seeing the 
+# origimal data
+p + geom_line(data = grid) 
+
+# If you make the scal logarithmic you see bioth well
+p + geom_line(data = grid) + scale_x_log10()
+
+# And a super complex graph ....
+# (1) Use data grid to get a combination of Diet and Time
+# (2) Then use gather_predictions to run themodels for this data to be predicted
+# (3) Gather_predictions adds a 'model' column (character). That needs to be changed 
+#     to factors 
+
+grid2 <- ChickWeight %>%
+  data_grid(Diet, Time) %>%                    # (1)
+  gather_predictions(chicken_model_Diet,       # (2)
+                     chicken_model_Time, 
+                     chicken_model_both, 
+                     chicken_model_full, 
+                     .pred = "weight") %>% 
+  mutate(model = factor(model,                 # (3)
+                        levels = c("chicken_model_Diet", "chicken_model_Time",
+                                   "chicken_model_both", "chicken_model_full"), 
+                        labels = c("weight~Diet", "weight~Time", "weight~Time+Diet",
+                                   "weight~Time*Diet"), 
+                        ordered = T)
+)
+
+ggplot(data = ChickWeight, 
+       aes( x = Time, y = weight, color = Diet)) +
+  geom_boxplot(aes(group = interaction(Time, Diet))) + 
+  geom_line(data = grid2) + 
+  facet_wrap(~ model)
 ```
 
+About this plot:
+
+* weight~Diet: completely ignores Time, looks extremely bad, it captures the difference in diet though
+* weight~Time: completely ignores Diet, but looks alright
+* weight~Time+Diet: adds the previous two together, but there is no interaction between Time and Diet (i.e the distance between the Diet lines stays constant over Time; the lines have the same slope)
+* weight~Time*Diet: adds interaction between Time and Diet, so all Diet lines have their own slope. This is the best model.
 
 # Exercise 6
 

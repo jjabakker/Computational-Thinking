@@ -1,0 +1,51 @@
+---
+title: "ISwR"
+author: "Hans"
+date: "9/16/2019"
+output: html_document
+---
+
+Important references:
+
+http://www.cookbook-r.com
+
+https://www.r-graph-gallery.com
+
+
+
+l# Setup - always run
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(nycflights13)
+p_load(ggplot2)
+p_load(Deriv)
+p_load(deSolve)
+p_load(phaseR)
+p_load(gridExtra)
+p_load(ISwR)    #Tis is the important one here
+theme_set(theme_minimal())
+```
+
+# Two sided test
+
+You have two data sets and you want to know if they are different 
+You can run a t.test, in which you compare the two sets
+
+```{r}
+energy
+
+plot(density(energy$expend[energy$stature == "lean"]))
+lines(density(energy$expend[energy$stature == "obese"]))
+
+# If you do not specify any assumption about the variances the default is that they are not the same
+# That is to say; you do ew Welch test
+t.test(energy$expend ~ energy$stature)
+
+# If you assume that the variances are the same you have to say that
+t.test(energy$expend ~ energy$stature, var.equal= T)
+
+```
+

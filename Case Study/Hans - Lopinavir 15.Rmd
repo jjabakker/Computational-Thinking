@@ -192,8 +192,6 @@ ggplot(data = Lopinavir,
   facet_wrap( ~ Group, ncol = 2)
   #facet_grid( ~ Group, margins = T )
   
-
-
 ```
 
 
