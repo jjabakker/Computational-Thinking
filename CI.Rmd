@@ -1,0 +1,62 @@
+---
+title: "Confidence Intervals"
+author: "Hans"
+date: "9/15/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Confidence intervals}
+
+# Formula for Confidence Interval = mu +- q(a) * SE
+# Probably you have seen 'mean +- 1.96 + SEM'? That is the Z quantile for CL = 5%
+
+qnorm(0.975)
+
+# Generate 100 samples with specified mu and sd
+# Normally speaking you do not know the population distribution. This is just for reference. 
+n_sample = 100
+pop_mean = 12
+pop_sd = 2
+
+# Take the samples and calculate the mean, sd and sem
+x_s <- rnorm(n_sample, pop_mean, pop_sd)
+sample_mean <- mean(x_s)
+sample_sd <- sd(x_s)
+sem = sample_sd / sqrt(n_sample)
+
+# Formula for confidence interval of 0.95
+# The formula to calulate the quartile you need is 0.95 + (1 - 0.95) / 2
+# With that new number you get the single sided quantile that leaves a right tail that is half 
+# of what you need. 
+# But then you need it left and right.........
+dq = 0.95
+q_to_use = dq + (1 - dq) / 2 
+
+if (n_sample < 30) {  # Use the 'T' distrubution
+  ci <- qt(q_to_use, df = n_sample - 1) * sem 
+} else {              # Use the normal distrubution
+  ci <- qnorm(q_to_use, sample_mean, sample_sd) * sem 
+}
+
+# Create a boxplot for the samples using base R
+# boxplot(x_s, ylim = c(5,25))
+# abline(h = c(sample_mean - ci,  sample_mean + ci), col = 'red', lty=2)
+# abline(h = c(sample_mean - sample_sd, sample_mean + sample_sd), col = 'blue', lty=2)
+
+# Create a boxplot for the samples using ggplot
+ggplot(data = data.frame(sample = x_s)) +
+  geom_boxplot(mapping = aes(y=sample)) +
+  ylim(5, 25) +
+  theme(axis.text.x = element_blank()) +
+  geom_hline(yintercept = c(sample_mean - ci, sample_mean + ci), 
+             col= 'red', 
+             linetype = 'dashed') +
+  geom_hline(yintercept = c(sample_mean - sample_sd, sample_mean + sample_sd), 
+             col = 'blue', 
+             linetype = 'dashed')
+
+```

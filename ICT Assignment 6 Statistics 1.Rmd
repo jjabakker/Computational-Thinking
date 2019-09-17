@@ -57,7 +57,7 @@ t_dens <- rt(1000, df = 5)
 # The quartile function
 plot(y = qt(xseq, df = 5), x = xseq)
 
-# The quartile function with tge axes reversed: the CDF function
+# The quartile function with the axes reversed: the CDF function
 plot(x = qt(xseq, df = 5), y = xseq)
 
 plot(y = pt(xseq, df = 5), x = xseq)

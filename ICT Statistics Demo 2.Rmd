@@ -10,12 +10,16 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-# This chunk can be used to set the global chunk options.
-#knitr::opts_chunk$set(eval=show.answers, collapse = T)
-
-if (!require("pacman")) install.packages("pacman"); library(pacman)
-p_load(tidyverse, cowplot, pracma, modelr)
-theme_set(theme_minimal(base_size = 13))
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(nycflights13)
+p_load(ggplot2)
+p_load(Deriv)
+p_load(deSolve)
+p_load(phaseR)
+p_load(gridExtra)
+theme_set(theme_minimal())
 ```
 
 
@@ -151,7 +155,7 @@ degree_freedom
 ```{r Using t.test}
 
 # The T test gives exactly the same information
-
+sample <- rnorm(16, 13.5, 2)
 t <- t.test(sample, mu = 12, conf.level = 0.95)
 t
 t$estimate
@@ -164,19 +168,19 @@ t$p.value
 ```
 
 
-## simulation
+## Simulation
 
 ```{r}
 replicate(1e4, t.test(rnorm(16, 12, 2), mu = 12, conf.level = 0.95)$p.value < 0.05) %>% summary()
 ```
 
 
-## two sample (bonus)
+## Two sample (bonus)
 
 ```{r}
 
 control <- c(4.4, 5.4, 3.8, 5.1)
-test <- c(5.5, 5, 6.1, 5.9)
+test    <- c(5.5, 5, 6.1, 5.9)
 
 my_data <- data.frame(
   value = c(control, test),
@@ -184,7 +188,7 @@ my_data <- data.frame(
  )
 my_data
 
-plot( my_data$value ~ my_data$experiment)
+plot(my_data$value ~ my_data$experiment)
 points(my_data$value ~ my_data$experiment, cex = 2, col = "red")
 
 plot(density(control), ylim = c(0,0.8))
@@ -208,13 +212,12 @@ abline(v = t_value)
 
 2 * pt(t_value, df = 6, lower.tail = TRUE)
 
-
-
-
 ```
 
 
-# shape of t distribution
+# Shape of t distribution
+
+Shows how a t-distribution is different from a normal distribution
 
 ```{r}
 (p <- dt_gg(df = 2))
@@ -224,33 +227,63 @@ abline(v = t_value)
 ```
 
 
-# example t-tests
+# Example t-tests
 
 ```{r}
-# are there significant wool breaks for wool type A?
-t.test( x = warpbreaks$breaks[ warpbreaks$wool == "A"]) # one sample t-test
 
-# are there significantly more than 30 woolbreaks for wool A?
-t.test( x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 30) # one sample t-test 
+head(warpbreaks)
+summary(warpbreaks)
+sm = mean(warpbreaks$breaks[warpbreaks$wool == "A"])
+plot(density(warpbreaks$breaks[warpbreaks$wool == "A"]))
+abline(v = sm)
 
-# welch t test (unequal variance)
-t.test(breaks~wool, data = warpbreaks) # two sample welch t-test
+# Are there significant wool breaks for wool type A?
+# Perform one sample t-test, with mu = 0 and confidence interval = 0.95
+# The two tests below are equal, because the default values are mu = 0 and ci = 0.95
 
-# student t-test equal variance
-t.test(breaks~wool, data = warpbreaks, var.equal = TRUE) # two sample t-test
+t.test(x = warpbreaks$breaks[warpbreaks$wool == "A"])
+t.test(x = warpbreaks$breaks[warpbreaks$wool == "A"], mu = 0, conv.level = 0.95) 
 
-# each person is measured twice, treated with 2 drugs at different/ far away time points
+# Are there significantly more than 30 woolbreaks for wool A?
+# Perform one sample t-test, with mu = 30 and confidence interval = 0.95
+t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 30) # one sample t-test 
+t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 32) # one sample t-test
+t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 34) # one sample t-test
+t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 36) # one sample t-test 
+t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 38) # one sample t-test
+abline(v = 38)
+
+# Is there a differenvce in the number of breaks as function of wool type  
+# If the assumption is that the variance of the two sets are unequal use Welch
+# Welch t test (unequal variance)
+t.test(breaks ~ wool, data = warpbreaks) # two sample welch t-test
+t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"],
+       y = warpbreaks$breaks[ warpbreaks$wool == "B"])
+
+# If the assumption is that the variance of the two sets are unequal use Welch
+# Student t-test equal variance
+t.test(breaks ~ wool, data = warpbreaks, var.equal = TRUE) # two sample t-test
+
+
+sleep
+summary(sleep)
+
+# Each person is measured twice, treated with 2 drugs at different/ far away time points
 t.test(extra ~ group, data = sleep) # t-test without pairing
+plot(extra ~ group, data = sleep)
+plot(density(sleep$extra[sleep$group == '1']))
+lines(density(sleep$extra[sleep$group == '2']))
 
-t.test(extra ~ group, paired = TRUE, data = sleep) # paired t-test (controling for interindividual differences)
+
+t.test(extra ~ group, paired = TRUE, data = sleep) 
+# paired t-test (controling for interindividual differences)
 # make sure the ordering of the individuals is the same within both groups.
-
-
 
 ```
 
 
 
+No idea what happens here.....
 ```{r}
 set.seed(12554)
 adj_p_data <- tibble( 
@@ -273,9 +306,17 @@ adj_p_data %>%
 
 #Anova
 ```{r}
-anova_model <- aov( breaks ~ tension, data = warpbreaks)
+warpbreaks
+# Now there are three groups that you consider: three tensions
+count(warpbreaks, tension)
+
+# The H0 is: they are all the same.
+# The p value is very small, so you reject that hypothesis
+anova_model <- aov(breaks ~ tension, data = warpbreaks)
 summary(anova_model)
 
+
+# Which is the set that causes the difference
 (warpbreaks_vs_others <- warpbreaks %>%
     as_tibble() %>%
     mutate(
@@ -283,13 +324,14 @@ summary(anova_model)
       is_M = tension == "M",
       is_H = tension == "H",
     ))
-
 t.test(breaks ~ is_L, data = warpbreaks_vs_others)
 t.test(breaks ~ is_M, data = warpbreaks_vs_others)
 t.test(breaks ~ is_H, data = warpbreaks_vs_others)
         
-
+# But you can do that easier with the TurkeyHSD test   
 TukeyHSD(anova_model)
+
+plot(TukeyHSD(anova_model, "tension"))
 
 ```
 
@@ -321,6 +363,8 @@ t_t
 summary(t_lm)
 
 ```
+
+
 
 # two way anova
 
@@ -359,7 +403,6 @@ anova(model_both, model_null)
 
 model_full <- lm(breaks ~ wool * tension, data = warpbreaks)
 anova(model_both, model_full )
-
 plot(model_both)
 
 ```

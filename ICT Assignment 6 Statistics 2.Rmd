@@ -14,7 +14,16 @@ library(tidyverse)
 library(dplyr)
 ```
 
-## Exercise 1
+## Exercise 1 (Two sample t-test)
+
+The sleep dataset contains two groups (drugs), perform a t-test and a paired t-test and explain the difference in the result.
+
+You do a two sample t-test to establish if the mu of the sets is equal (H0).
+You consider if the data would provide a suggestion otherwise.
+The p value gives the change that this data might have occurred with a confidence of 0.95
+A lower p value leads to rejecting the H0 hypothes.
+
+The differen of pairing @@@@@@
 
 ```{r}
 sleep
@@ -26,33 +35,87 @@ t.test(data = sleep, extra ~ group, alternative = 'two.sided', paired = TRUE)
 ## Exercise 2
 
 ```{r}
+# Old style plotting
 plot(extra ~ group, data = sleep)
 
-p <- sleep %>% 
-  ggplot(aes(extra, ID)) + 
-  geom_boxplot() + 
-  theme_minimal(base_size = 15)
-p 
+# Using ggplot library
+ggplot(sleep, aes(group, extra)) + 
+  geom_boxplot()
 
+ggplot(sleep, aes(group, extra)) + 
+  geom_boxplot() +
+  geom_point()
+
+#This plot shows the paired measurements nicely
+ggplot(data = sleep, 
+       mapping = aes(x = group, y = extra, color = ID)) + 
+    geom_point() +
+    geom_path(aes(group = ID)) +
+    theme_minimal(base_size = 15)
 
 ```
 
 
 # Exercise 3
 
+Which measurements are significantly different across the species in the iris dataset? There are more than 2 levels (because there are 3 species) so perform anova tests (1 for each measurement type). 
+
+Follow this up with post-hoc tests. What measurement and for which 2 species within this measurement has the lowest p-value? Verify this result with boxplots of the iris data (use par(mfrow=c(2,2)) ) and create a boxplot for each measurement type (sepal and petal lengths and widths).
+
+Finally, check your linear model assumptions using visual inspection. Are there any clear violations?
+
 ```{r}
-#glimpse(iris)
+glimpse(iris)
+head(iris)
+count(iris, Species)
+
+# Remember, there are three species in the table
+# The question is if any of the four variables depend on the Species and
+# more specifically, if there are differences in dependencies
+
+aov_sl = aov(data = iris, formula = Sepal.Length ~ Species)
+aov_pl = aov(data = iris, formula = Petal.Length ~ Species)
+aov_sw = aov(data = iris, formula = Sepal.Width ~ Species)
+aov_pw = aov(data = iris, formula = Petal.Width ~ Species)
+
+lm_sl = lm(data = iris, formula = Sepal.Length ~ Species)
+lm_pl = lm(data = iris, formula = Petal.Length ~ Species)
+lm_sw = lm(data = iris, formula = Sepal.Width ~ Species)
+lm_pw = lm(data = iris, formula = Petal.Width ~ Species)
+
+# Inspect the summary of the aov
+summary(aov_sl)
+
+# And then summary of the lm
+summary(lm_sl)
+
+# Both give low p values, so the interpretation is that the effects are not the same 
+# Now to find out where the exactly the differences are you run the tukey kramer/ HSD test
+
+TukeyHSD(aov_sl)
 
 an1 = aov(data = iris, formula = Sepal.Length ~ Species)
 an2 = aov(data = iris, formula = Petal.Length ~ Species)
 an3 = aov(data = iris, formula = Sepal.Width ~ Species)
 an4 = aov(data = iris, formula = Petal.Width ~ Species)
 
-an1 = aov(data = iris, formula = Sepal.Length ~ Species)
-an2 = aov(data = iris, formula = Petal.Length ~ Species)
-an3 = aov(data = iris, formula = Sepal.Width ~ Species)
-an4 = aov(data = iris, formula = Petal.Width ~ Species)
+#Show boxplots
+par(mfrow=c(2,2))
+boxplot(Sepal.Length  ~ Species, data = iris, main = "Sepal.Length")
+boxplot(Sepal.Width  ~ Species, data = iris, main = "Sepal.Width")
+boxplot(Petal.Length  ~ Species, data = iris, main = "Petal.Length")
+boxplot(Petal.Width  ~ Species, data = iris, main = "Petal.Width")
+par(mfrow=c(1,1))
 
+# Show the four plots for each model
+par(mfrow=c(2,2))
+plot(an1)
+plot(an2)
+plot(an3)
+plot(an4)
+par(mfrow=c(1,1))
+
+# Compare the Residual vs Fitted plots for all models
 par(mfrow=c(2,2))
 plot(an1, which=1)
 plot(an2, which=1)
@@ -60,6 +123,22 @@ plot(an3, which=1)
 plot(an4, which=1)
 par(mfrow=c(1,1))
 
+par(mfrow=c(2,2))
+plot(an1, which=5)
+plot(an2, which=5)
+plot(an3, which=5)
+plot(an4, which=5)
+par(mfrow=c(1,1))
+
+# There are six different plots
+plot(an1)
+
+plot(an1, which=1)
+plot(an1, which=2)
+plot(an1, which=3)
+plot(an1, which=4)
+plot(an1, which=5)
+plot(an1, which=6)
 ```
 
 
@@ -102,7 +181,7 @@ anova(model_lm_d, model_lm_dt1)
 anova(model_lm_d, model_lm_dt2)
 
 # There is limited improvement over de simple t model
-# In oher words just c considering the time already helps a lot
+# In other words just c considering the time already helps a lot
 anova(model_lm_t, model_lm_dt1)
 anova(model_lm_t, model_lm_dt2)
 
@@ -110,12 +189,13 @@ anova(model_lm_t, model_lm_dt2)
 anova(model_lm_dt1, model_lm_dt2)
 
 # Just to test what happens if you supply the same models
+# You get the sane results.....
 anova(model_lm_d, model_lm_d)
 
-# OK, so model model_lm_dt2 is superior
+# OK, so model model_lm_dt2 is superior, because it has the lowest RSS score 
 
 # Generate new data for extrapolation purposes
-new_data <- data.frame(Time = rep(c(50,100,150,365), 4), 
+new_data <- data.frame(Time = rep(c(50, 100, 150, 365), 4), 
                        Diet = rep(as.factor(1:4), each = 4))
 new_data
 
@@ -124,14 +204,11 @@ p = predict(model_lm_dt2, new_data)
 new_data <- cbind(new_data, p)
 new_data <- new_data %>% rename(weight = p)
 
-
-
 library(modelr)
 inter <- ChickWeight %>%
   data_grid(Diet) %>%
   crossing(Time = 1:5) %>%
   add_predictions(model_lm_dt2, var = "weight")
-  #gather_predictions(model_lm_dt2,model_lm_dt1, .pred = "weight")
 
 fancy_data <- tribble(
   ~type, ~data,
@@ -141,18 +218,62 @@ fancy_data <- tribble(
 
 # Show the plot for Chick 1 
 chick1 = filter(ChickWeight, Chick == 1)
-ggplot(data=chick1,aes(x=Time, y=weight)) +
+ggplot(data = chick1,
+       aes(x=Time, y=weight)) +
   geom_line() +
   geom_point(data = fancy_data, mapping = aes(color = type), size = 3) +
   scale_x_continuous(trans = "log2")
 
-
-new_data <- data.frame(Time = c(1), 
-                       Diet = c(as.factor(15))
-p = predict(model_lm_dt2, new_data)
-p
 ```
 
+
+# Exercise 4 from sols
+
+```{r}
+
+# Consider the effect of Diet
+chicken_model_Diet <- lm(weight ~ Diet, data = ChickWeight) 
+summary(chicken_model_Diet)
+
+# Consider the effect of Time
+chicken_model_Time <- lm(weight ~ Time, data = ChickWeight) 
+summary(chicken_model_Time)
+
+# Consider the effect of Time + Diet
+chicken_model_both <- lm(weight ~ Time + Diet, data = ChickWeight)
+summary(chicken_model_both)
+
+# Consider the effect of Time * Diet
+chicken_model_full <- lm(weight ~ Time * Diet, data = ChickWeight)
+summary(chicken_model_full)
+
+
+# Do anova comparison, this works only for comparing increasingly complex models
+# You cannot compare two completelt different models (such as Time and Diet) 
+anova(chicken_model_Diet, chicken_model_Time)
+
+# The next two models can be compared
+anova(chicken_model_Time, chicken_model_both)
+anova(chicken_model_both, chicken_model_full)
+
+# COntinue
+new_data <- data.frame(Time = rep(c(50,100,150,365), 4), 
+                       Diet = rep(as.factor(1:4), each = 4))
+predict(chicken_model_both, newdata = new_data)
+
+new_data$Weight <- predict(chicken_model_full, newdata = new_data) 
+new_data
+
+grid <- ChickWeight %>%
+  data_grid(Diet) %>%
+  crossing(Time = c(50,100,150,365)) %>%
+  add_predictions(chicken_model_full, var = "weight")
+grid
+
+ggplot(data = grid, aes( x = Time, y = weight, color = Diet)) +
+  geom_point() + geom_line() + theme_minimal()
+
+```
 
 
 

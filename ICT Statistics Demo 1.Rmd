@@ -165,6 +165,7 @@ sem = 2 / sqrt(sample_size)
 sem
 ```
 
+
 # Manual ECDF from quantiles
 
 
@@ -334,11 +335,13 @@ The null-hypothesis of this test is that the population is normally distributed.
 # a very low p value
 hist(runif(10000))
 shapiro.test(runif(1000))
+qqnorm(runif(1000))
 
 # A uniform distribution is not expected to meet the shapiro test and generates 
 # a high p value
 hist(rnorm(10000))
 shapiro.test(rnorm(1000))
+qqnorm(rnorm(1000))
 
 ```
 

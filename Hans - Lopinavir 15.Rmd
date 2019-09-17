@@ -1,0 +1,253 @@
+---
+title: "Lopinavir"
+author: "Hans"
+date: "9/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(ggplot2)
+p_load(maggrittr)
+p_load(readxl)
+p_load(gridExtra)
+theme_set(theme_minimal())
+```
+
+# Question 1
+You have received an excel file “Lopinavir_Pregnancy.xlsx.” which contains all relevant information in different sheet. Read in all data in R and describe the design of the study.
+
+```{r Read the data}
+
+getwd()
+
+# lsx1 = read_excel(path = "./Case Study/Lopinavir_Pregnancy.xlsx",
+#                   sheet = "Patient Characteristics",
+#                   col_names = T)
+# lsx2 = read_excel(path = "./Case Study/Lopinavir_Pregnancy.xlsx", 
+#                   sheet = "Concentrations",
+#                   col_names = T, 
+#                   skip = 1)
+
+lsx1 = read_excel(path = "Lopinavir_Pregnancy.xlsx",
+                  sheet = "Patient Characteristics",
+                  col_names = T)
+lsx2 = read_excel(path = "Lopinavir_Pregnancy.xlsx", 
+                  sheet = "Concentrations",
+                  col_names = T, 
+                  skip = 1)
+```
+
+# Question 2
+The software that you are going to use to analyze the data needs the format to be as indicated below.
+
+```{r Convert Lopinavir}
+
+# Ensure the column names match and do the join
+colnames(lsx2)[colnames(lsx2) == "...1"] <- "ID" 
+Lopinavir = left_join(lsx1, lsx2)
+
+# Rename columns to the required values
+colnames(Lopinavir)[colnames(Lopinavir) == "pregnant (1=yes)"] <- "PREGNANT"
+colnames(Lopinavir)[colnames(Lopinavir) == "age"] <- "AGE"
+
+Lopinavir <- Lopinavir %>%
+  gather(key = "TIME", value = "CONC", c(`1 hr`:`8 hr`)) %>%  # Make a long table
+  select('ID', 'TIME', 'CONC', 'PREGNANT', 'AGE') %>%         # Reorder the columns
+  arrange(ID) %>%                                             # Sort by ID
+  separate('TIME', c("TIME","delete")) %>%                    # Split out the TIME field
+  select(-'delete')                                           # Remove the column you do not need
+
+# Set the logical formats
+Lopinavir$PREGNANT <- as.factor(Lopinavir$PREGNANT)
+Lopinavir$ID <- as.factor(Lopinavir$ID)
+Lopinavir$TIME <- as.numeric(Lopinavir$TIME)
+Lopinavir$AGE <- as.integer(Lopinavir$AGE)
+
+head(Lopinavir)
+
+glimpse(Lopinavir)
+
+count(Lopinavir, ID)
+count(Lopinavir, TIME)
+count(Lopinavir, AGE)
+count(Lopinavir, PREGNANT)
+count(Lopinavir, CONC)
+
+summary(Lopinavir)
+
+```
+
+# Question 3
+
+Plot the concentration-time data for all patients and use different colors for pregnant and non-pregnant women and different line types for women older and younger than 35. Do this on a linear scale and semi-logarithmic scale
+
+```{r Plot Lopinavir data - version 1}
+
+# Add columns to the Lopinavir table for easy selection 
+Lopinavir
+
+Lopinavir$P_P35  = Lopinavir$PREGNANT == 1 & Lopinavir$AGE > 35
+Lopinavir$NP_P35 = Lopinavir$PREGNANT == 1 & Lopinavir$AGE <= 35
+Lopinavir$P_M35  = Lopinavir$PREGNANT == 0 & Lopinavir$AGE > 35
+Lopinavir$NP_M35 = Lopinavir$PREGNANT == 0 & Lopinavir$AGE <= 35
+Lopinavir$Age35  = Lopinavir$AGE <= 35
+
+pset_P_P35   = filter(Lopinavir, Lopinavir$P_P35 == T)
+pset_NP_P35  = filter(Lopinavir, Lopinavir$NP_P35 == T)
+pset_P_M35   = filter(Lopinavir, Lopinavir$P_M35 == T)
+pset_NP_M35  = filter(Lopinavir, Lopinavir$NP_M35 == T)
+
+ 
+pn <- ggplot() +
+  geom_point(data = pset_P_P35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 1, colour = 'red') +
+  geom_smooth(data = pset_P_P35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5, colour = 'red',
+             linetype = 'solid',
+             method='lm', se = FALSE) +
+  geom_point(data = pset_NP_P35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 1,
+             colour = 'black') + 
+  geom_smooth(data = pset_NP_P35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5, colour = 'black',
+             linetype = 'solid',
+             method='lm', se = FALSE) +
+  geom_point(data = pset_P_M35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 1,
+             colour = 'red') +
+  geom_smooth(data = pset_P_M35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5, colour = 'red',
+             linetype = 'dashed',
+             method='lm', se = FALSE) +
+  geom_point(data = pset_NP_M35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 1, colour = 'black') +
+  geom_smooth(data = pset_NP_M35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5, colour = 'black',
+             linetype = 'dashed',
+             method='lm', se = FALSE) +
+  labs(color = "Patient") +
+  labs(x = "Time") +
+  labs(y = "Concentration") +
+  labs(title = "New Plot", subtitle = "New subtitle") +
+  labs(caption = "(based on data from ...)")
+
+pl <- pn +
+  scale_y_continuous(trans='log', breaks = c(1, 5, 10)) +
+  labs(y = "Log Concentration") 
+
+gridExtra::grid.arrange(
+    pl,
+    pn,
+    nrow = 1)
+
+pl
+
+```
+
+```{r Plot Lopinavir data - version 2}
+
+# Add columns to the Lopinavir table for easy selection 
+
+Lopinavir$Age35  = Lopinavir$AGE <= 35
+Lopinavir$Group  = "Code"
+cng = which(colnames(Lopinavir) == "Group")
+cnp = which(colnames(Lopinavir) == "PREGNANT")
+cna = which(colnames(Lopinavir) == "AGE" )
+
+for (i in 1:nrow(Lopinavir)) {
+  if (Lopinavir[i, cnp] == "1") {
+    if (Lopinavir[i, cna] > 35) {
+      Lopinavir[i,cng] = "Pregnant > 35"
+    } else {
+      Lopinavir[i,cng] = "Pregnant <= 35"
+    }
+  }
+  else {
+    if (Lopinavir[i, cna] > 35) {
+      Lopinavir[i,cng] = "Not Pregnant > 35"
+    } else {
+      Lopinavir[i,cng] = "Not Pregnant <= 35"
+    }
+  }
+}
+
+ 
+ggplot(data = Lopinavir, 
+       mapping = aes(x = TIME, y = CONC)) +
+  geom_point(size = 1, colour = 'red') +
+  labs(color = "Patient") +
+  labs(x = "Time") +
+  scale_y_continuous(trans='log', breaks = c(1, 5, 10)) +
+  labs(y = "Log Concentration") +
+  labs(title = "New Plot", subtitle = "New subtitle") +
+  labs(caption = "(based on data from ...)") +
+  facet_wrap( ~ Group, ncol = 2)
+  #facet_grid( ~ Group, margins = T )
+  
+
+
+```
+
+
+# Question 4
+The concentration-time data reveals a linear profile on a semi-logarithmic scale. To be able to perform a linear regression add a new column to the dataset that contains the LN-values of the concentrations.
+
+```{r}
+mutate(Lopinavir, log(CONC))
+```
+
+# Question 5
+Fit a linear model to the ln-transformed concentration values of both treatment arms. The peak concentration is mainly determined by the distribution volume of lopinavir, while the slope of the profiles is mainly determined by the elimination rate constant. Do you anticipate differences in elimination rate constants between pregnant and non-pregnant women? And between woman older and younger than 35 years.
+
+```{r Linear Models}
+lm_p   <- lm(data = Lopinavir, log(CONC) ~ PREGNANT)
+lm_a   <- lm(data = Lopinavir, log(CONC) ~ Age35)
+lm_ap1 <- lm(data = Lopinavir, log(CONC) ~ Age35 + PREGNANT)
+lm_ap2 <- lm(data = Lopinavir, log(CONC) ~ Age35 * PREGNANT)
+
+lm_p
+lm_a
+lm_ap1
+lm_ap2
+
+summary(lm_p)
+summary(lm_a)
+summary(lm_ap1)
+summary(lm_ap2)
+
+```
+
+
+```{r}
+anova(lm_p, lm_a)
+anova(lm_p, lm_ap1)
+anova(lm_p, lm_ap2)
+anova(lm_a, lm_ap1)
+anova(lm_a, lm_ap2)
+anova(lm_ap1, lm_ap2)
+
+```
+
+```{r}
+par(mfrow=c(2,2))
+boxplot(data = Lopinavir, log(CONC) ~ Age35 * PREGNANT, main = "Test")
+par(mfrow=c(1,1))
+
+```
+
+# Question 6 
+Fit a linear model to the ln-transformed concentration values of all individual patients in all four patient types (pregnant & younger than 35 years, pregnant & older than 35 years, non-pregnant & younger than 35 years, non-pregnant & older than 35 years) and make a table that includes ID number, patient type, and the slope of the linear fit. This slope represents the elimination rate constant of lopinavir.
+
+# Question 7
+Perform an ANOVA analysis and provide an interpretation of the results regarding the research question of whether the elimination rate constant of lopinavir is statistically significantly different in the four patient types.
