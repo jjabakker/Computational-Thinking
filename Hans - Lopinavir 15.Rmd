@@ -155,37 +155,34 @@ pl
 
 ```
 
+
+
+
 ```{r Plot Lopinavir data - version 2}
 
-# Add columns to the Lopinavir table for easy selection 
-
-Lopinavir$Age35  = Lopinavir$AGE <= 35
 Lopinavir$Group  = "Code"
-cng = which(colnames(Lopinavir) == "Group")
-cnp = which(colnames(Lopinavir) == "PREGNANT")
-cna = which(colnames(Lopinavir) == "AGE" )
 
 for (i in 1:nrow(Lopinavir)) {
-  if (Lopinavir[i, cnp] == "1") {
-    if (Lopinavir[i, cna] > 35) {
-      Lopinavir[i,cng] = "Pregnant > 35"
+  if (Lopinavir[i,]$PREGNANT == "1") {
+    if (Lopinavir[i,]$AGE > 35) {
+      Lopinavir[i,]$Group = "Pregnant > 35"
     } else {
-      Lopinavir[i,cng] = "Pregnant <= 35"
+      Lopinavir[i,]$Group = "Pregnant <= 35"
     }
   }
   else {
-    if (Lopinavir[i, cna] > 35) {
-      Lopinavir[i,cng] = "Not Pregnant > 35"
+    if (Lopinavir[i,]$AGE > 35) {
+      Lopinavir[i,cng]$Group = "Not Pregnant > 35"
     } else {
-      Lopinavir[i,cng] = "Not Pregnant <= 35"
+      Lopinavir[i,cng]$Group = "Not Pregnant <= 35"
     }
   }
 }
 
- 
 ggplot(data = Lopinavir, 
        mapping = aes(x = TIME, y = CONC)) +
   geom_point(size = 1, colour = 'red') +
+  geom_path() +
   labs(color = "Patient") +
   labs(x = "Time") +
   scale_y_continuous(trans='log', breaks = c(1, 5, 10)) +
@@ -211,6 +208,9 @@ mutate(Lopinavir, log(CONC))
 Fit a linear model to the ln-transformed concentration values of both treatment arms. The peak concentration is mainly determined by the distribution volume of lopinavir, while the slope of the profiles is mainly determined by the elimination rate constant. Do you anticipate differences in elimination rate constants between pregnant and non-pregnant women? And between woman older and younger than 35 years.
 
 ```{r Linear Models}
+
+Lopinavir$Age35  = Lopinavir$AGE <= 35
+
 lm_p   <- lm(data = Lopinavir, log(CONC) ~ PREGNANT)
 lm_a   <- lm(data = Lopinavir, log(CONC) ~ Age35)
 lm_ap1 <- lm(data = Lopinavir, log(CONC) ~ Age35 + PREGNANT)
