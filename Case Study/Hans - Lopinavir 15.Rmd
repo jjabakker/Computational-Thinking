@@ -31,13 +31,13 @@ getwd()
 #                   col_names = T, 
 #                   skip = 1)
 
-lsx1 = read_excel(path = "Lopinavir_Pregnancy.xlsx",
-                  sheet = "Patient Characteristics",
-                  col_names = T)
-lsx2 = read_excel(path = "Lopinavir_Pregnancy.xlsx", 
-                  sheet = "Concentrations",
-                  col_names = T, 
-                  skip = 1)
+lsx1 <- read_excel(path = "Lopinavir_Pregnancy.xlsx",
+                   sheet = "Patient Characteristics",
+                   col_names = T)
+lsx2 <- read_excel(path = "Lopinavir_Pregnancy.xlsx", 
+                   sheet = "Concentrations",
+                   col_names = T, 
+                   skip = 1)
 ```
 
 # Question 2
@@ -47,7 +47,7 @@ The software that you are going to use to analyze the data needs the format to b
 
 # Ensure the column names match and do the join
 colnames(lsx2)[colnames(lsx2) == "...1"] <- "ID" 
-Lopinavir = left_join(lsx1, lsx2)
+Lopinavir <- left_join(lsx1, lsx2)
 
 # Rename columns to the required values
 colnames(Lopinavir)[colnames(Lopinavir) == "pregnant (1=yes)"] <- "PREGNANT"
@@ -62,9 +62,9 @@ Lopinavir <- Lopinavir %>%
 
 # Set the logical formats
 Lopinavir$PREGNANT <- as.factor(Lopinavir$PREGNANT)
-Lopinavir$ID <- as.factor(Lopinavir$ID)
-Lopinavir$TIME <- as.numeric(Lopinavir$TIME)
-Lopinavir$AGE <- as.integer(Lopinavir$AGE)
+Lopinavir$ID       <- as.factor(Lopinavir$ID)
+Lopinavir$TIME     <- as.numeric(Lopinavir$TIME)
+Lopinavir$AGE      <- as.integer(Lopinavir$AGE)
 
 head(Lopinavir)
 
@@ -89,16 +89,16 @@ Plot the concentration-time data for all patients and use different colors for p
 # Add columns to the Lopinavir table for easy selection 
 Lopinavir
 
-Lopinavir$P_P35  = Lopinavir$PREGNANT == 1 & Lopinavir$AGE > 35
-Lopinavir$NP_P35 = Lopinavir$PREGNANT == 1 & Lopinavir$AGE <= 35
-Lopinavir$P_M35  = Lopinavir$PREGNANT == 0 & Lopinavir$AGE > 35
-Lopinavir$NP_M35 = Lopinavir$PREGNANT == 0 & Lopinavir$AGE <= 35
-Lopinavir$Age35  = Lopinavir$AGE <= 35
+Lopinavir$P_P35  <- Lopinavir$PREGNANT == 1 & Lopinavir$AGE > 35
+Lopinavir$NP_P35 <- Lopinavir$PREGNANT == 1 & Lopinavir$AGE <= 35
+Lopinavir$P_M35  <- Lopinavir$PREGNANT == 0 & Lopinavir$AGE > 35
+Lopinavir$NP_M35 <- Lopinavir$PREGNANT == 0 & Lopinavir$AGE <= 35
+Lopinavir$Age35  <- Lopinavir$AGE <= 35
 
-pset_P_P35   = filter(Lopinavir, Lopinavir$P_P35 == T)
-pset_NP_P35  = filter(Lopinavir, Lopinavir$NP_P35 == T)
-pset_P_M35   = filter(Lopinavir, Lopinavir$P_M35 == T)
-pset_NP_M35  = filter(Lopinavir, Lopinavir$NP_M35 == T)
+pset_P_P35   <- filter(Lopinavir, Lopinavir$P_P35 == T)
+pset_NP_P35  <- filter(Lopinavir, Lopinavir$NP_P35 == T)
+pset_P_M35   <- filter(Lopinavir, Lopinavir$P_M35 == T)
+pset_NP_M35  <- filter(Lopinavir, Lopinavir$NP_M35 == T)
 
  
 pn <- ggplot() +
@@ -160,7 +160,7 @@ pl
 
 ```{r Plot Lopinavir data - version 2}
 
-Lopinavir$Group  = "Code"
+Lopinavir$Group  <- "Code"   # Create a 
 
 for (i in 1:nrow(Lopinavir)) {
   if (Lopinavir[i,]$PREGNANT == "1") {
@@ -172,9 +172,9 @@ for (i in 1:nrow(Lopinavir)) {
   }
   else {
     if (Lopinavir[i,]$AGE > 35) {
-      Lopinavir[i,cng]$Group = "Not Pregnant > 35"
+      Lopinavir[i,]$Group = "Not Pregnant > 35"
     } else {
-      Lopinavir[i,cng]$Group = "Not Pregnant <= 35"
+      Lopinavir[i,]$Group = "Not Pregnant <= 35"
     }
   }
 }
@@ -209,31 +209,30 @@ Fit a linear model to the ln-transformed concentration values of both treatment 
 
 Lopinavir$Age35  = Lopinavir$AGE <= 35
 
-lm_p   <- lm(data = Lopinavir, log(CONC) ~ PREGNANT)
-lm_a   <- lm(data = Lopinavir, log(CONC) ~ Age35)
-lm_ap1 <- lm(data = Lopinavir, log(CONC) ~ Age35 + PREGNANT)
-lm_ap2 <- lm(data = Lopinavir, log(CONC) ~ Age35 * PREGNANT)
+lm_pregnant           <- lm(data = Lopinavir, log(CONC) ~ PREGNANT)
+lm_age                <- lm(data = Lopinavir, log(CONC) ~ Age35)
+lm_pregnant_plus_age  <- lm(data = Lopinavir, log(CONC) ~ Age35 + PREGNANT)
+lm_pregnant_times_age <- lm(data = Lopinavir, log(CONC) ~ Age35 * PREGNANT)
 
-lm_p
-lm_a
-lm_ap1
-lm_ap2
+lm_pregnant
+lm_age
+lm_pregnant_plus_age
+lm_pregnant_times_age
 
-summary(lm_p)
-summary(lm_a)
-summary(lm_ap1)
-summary(lm_ap2)
+summary(lm_pregnant)
+summary(lm_age)
+summary(lm_pregnant_plus_age)
+summary(lm_pregnant_times_age)
 
 ```
 
-
 ```{r}
-anova(lm_p, lm_a)
-anova(lm_p, lm_ap1)
-anova(lm_p, lm_ap2)
-anova(lm_a, lm_ap1)
-anova(lm_a, lm_ap2)
-anova(lm_ap1, lm_ap2)
+anova(lm_pregnant,          lm_age)
+anova(lm_pregnant,          lm_pregnant_plus_age)
+anova(lm_pregnant,          lm_pregnant_times_age)
+anova(lm_age,               lm_pregnant_plus_age)
+anova(lm_age,               lm_pregnant_times_age)
+anova(lm_pregnant_plus_age, lm_pregnant_times_age)
 
 ```
 
@@ -249,3 +248,59 @@ Fit a linear model to the ln-transformed concentration values of all individual 
 
 # Question 7
 Perform an ANOVA analysis and provide an interpretation of the results regarding the research question of whether the elimination rate constant of lopinavir is statistically significantly different in the four patient types.
+
+
+grid2 <- ChickWeight %>%
+  data_grid(Diet, Time) %>%                    # (1)
+  gather_predictions(chicken_model_Diet,       # (2)
+                     chicken_model_Time, 
+                     chicken_model_both, 
+                     chicken_model_full, 
+                     .pred = "weight") %>% 
+  mutate(model = factor(model,                 # (3)
+                        levels = c("chicken_model_Diet", "chicken_model_Time",
+                                   "chicken_model_both", "chicken_model_full"), 
+                        labels = c("weight~Diet", "weight~Time", "weight~Time+Diet",
+                                   "weight~Time*Diet"), 
+                        ordered = T)
+)
+
+ggplot(data = ChickWeight, 
+       aes( x = Time, y = weight, color = Diet)) +
+  geom_boxplot(aes(group = interaction(Time, Diet))) + 
+  geom_line(data = grid2) + 
+  facet_wrap(~ model)
+  
+  
+```{r Compare models by plotting the original data in the models}
+
+# Create data to predict
+data_to_predict <- Lopinavir
+
+# Do the prediction with the various models
+p <- gather_predictions(data_to_predict,
+                        lm_age,   
+                        lm_pregnant, 
+                        lm_pregnant_plus_age, 
+                        lm_pregnant_times_age, 
+                        .pred = "CONC")
+
+mutate(p, model = factor(model,
+                         levels = c("lm_age", 
+                                    "lm_pregnant",
+                                    "lm_pregnant_plus_age", 
+                                    "lm_pregnant_times_age"),
+                         labels = c("Conc - Age", 
+                                    "Conc - Pregnant", 
+                                    "Conc - Age + Pregnant",
+                                    "Conc - Age + Pregnant"),
+                         ordered = T)
+)
+
+ggplot(data = Lopinavir, 
+       aes( x = TIME, y = CONC, color = PREGNANT)) +
+  geom_boxplot(aes(group = interaction(TIME, PREGNANT))) + 
+  geom_line(data = p) + 
+  facet_wrap(~ model)
+```
+
