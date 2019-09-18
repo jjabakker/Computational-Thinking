@@ -261,7 +261,7 @@ anova(chicken_model_both, chicken_model_full)
 new_data <- data.frame(Time = rep(c(50,100,150,365), 4), 
                        Diet = rep(as.factor(1:4), each = 4))
 
-# You can do predict and then it it to the dataframe 
+# You can do predict and then it to the dataframe 
 predict(chicken_model_both, newdata = new_data)
 new_data$Weight <- predict(chicken_model_full, newdata = new_data) 
 new_data
@@ -320,9 +320,13 @@ grid2 <- ChickWeight %>%
                      chicken_model_full, 
                      .pred = "weight") %>% 
   mutate(model = factor(model,                 # (3)
-                        levels = c("chicken_model_Diet", "chicken_model_Time",
-                                   "chicken_model_both", "chicken_model_full"), 
-                        labels = c("weight~Diet", "weight~Time", "weight~Time+Diet",
+                        levels = c("chicken_model_Diet", 
+                                   "chicken_model_Time",
+                                   "chicken_model_both", 
+                                   "chicken_model_full"), 
+                        labels = c("weight~Diet", 
+                                   "weight~Time", 
+                                   "weight~Time+Diet",
                                    "weight~Time*Diet"), 
                         ordered = T)
 )

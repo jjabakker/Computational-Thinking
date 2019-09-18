@@ -177,7 +177,7 @@ replicate(1e4, t.test(rnorm(16, 12, 2), mu = 12, conf.level = 0.95)$p.value < 0.
 
 ## Two sample (bonus)
 
-```{r}
+```{r Two sample t-test}
 
 control <- c(4.4, 5.4, 3.8, 5.1)
 test    <- c(5.5, 5, 6.1, 5.9)
@@ -229,7 +229,7 @@ Shows how a t-distribution is different from a normal distribution
 
 # Example t-tests
 
-```{r}
+```{r Example t-test}
 
 head(warpbreaks)
 summary(warpbreaks)
@@ -241,10 +241,10 @@ abline(v = sm)
 # Perform one sample t-test, with mu = 0 and confidence interval = 0.95
 # The two tests below are equal, because the default values are mu = 0 and ci = 0.95
 
-t.test(x = warpbreaks$breaks[warpbreaks$wool == "A"])
 t.test(x = warpbreaks$breaks[warpbreaks$wool == "A"], mu = 0, conv.level = 0.95) 
+t.test(x = warpbreaks$breaks[warpbreaks$wool == "A"])    # The defaults are 0 and 0.95 so you can leave that out if you wish
 
-# Are there significantly more than 30 woolbreaks for wool A?
+# Are there significantly more than 30, 32, 34, ...  woolbreaks for wool A?
 # Perform one sample t-test, with mu = 30 and confidence interval = 0.95
 t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 30) # one sample t-test 
 t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 32) # one sample t-test
@@ -252,35 +252,46 @@ t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 34) # one sample t-t
 t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 36) # one sample t-test 
 t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"], mu = 38) # one sample t-test
 abline(v = 38)
+```
 
-# Is there a differenvce in the number of breaks as function of wool type  
+```{r Two sample t-test}
+
+# Example with warpbreaks
+
+# Is there a difference in the number of breaks as function of wool type  
 # If the assumption is that the variance of the two sets are unequal use Welch
 # Welch t test (unequal variance)
-t.test(breaks ~ wool, data = warpbreaks) # two sample welch t-test
-t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"],
-       y = warpbreaks$breaks[ warpbreaks$wool == "B"])
 
-# If the assumption is that the variance of the two sets are unequal use Welch
+t.test(x = warpbreaks$breaks[ warpbreaks$wool == "A"],    # Two sample welch t-test
+       y = warpbreaks$breaks[ warpbreaks$wool == "B"])
+t.test(breaks ~ wool, data = warpbreaks)                  # This is equivalent, but it works because there are two wool types 
+
+# If the assumption is that the variance of the two sets are equal use Student 
 # Student t-test equal variance
 t.test(breaks ~ wool, data = warpbreaks, var.equal = TRUE) # two sample t-test
 
 
+# Example with sleep
+
 sleep
 summary(sleep)
 
-# Each person is measured twice, treated with 2 drugs at different/ far away time points
-t.test(extra ~ group, data = sleep) # t-test without pairing
+# This is a normal test, where you compared two datasets
+t.test(extra ~ group, data = sleep)  
 plot(extra ~ group, data = sleep)
 plot(density(sleep$extra[sleep$group == '1']))
 lines(density(sleep$extra[sleep$group == '2']))
+```
 
 
-t.test(extra ~ group, paired = TRUE, data = sleep) 
+```{r Paired t-test}
+# Each person is measured twice, treated with 2 drugs at different/ far away time points
 # paired t-test (controling for interindividual differences)
 # make sure the ordering of the individuals is the same within both groups.
 
-```
+t.test(extra ~ group, paired = TRUE, data = sleep) 
 
+```
 
 
 No idea what happens here.....
@@ -304,18 +315,23 @@ adj_p_data %>%
 
 
 
-#Anova
-```{r}
+# Anova
+```{r Anova}
 warpbreaks
-# Now there are three groups that you consider: three tensions
+# Now there are three groups that you consider: three tensions (and two wools)
 count(warpbreaks, tension)
+count(warpbreaks, wool)
 
 # The H0 is: they are all the same.
 # The p value is very small, so you reject that hypothesis
 anova_model <- aov(breaks ~ tension, data = warpbreaks)
 summary(anova_model)
 
+lm_model <- lm(breaks ~ tension, data = warpbreaks)
+summary(lm_model)
+```
 
+```{r TukeyHSD}
 # Which is the set that causes the difference
 (warpbreaks_vs_others <- warpbreaks %>%
     as_tibble() %>%
@@ -328,9 +344,14 @@ t.test(breaks ~ is_L, data = warpbreaks_vs_others)
 t.test(breaks ~ is_M, data = warpbreaks_vs_others)
 t.test(breaks ~ is_H, data = warpbreaks_vs_others)
         
-# But you can do that easier with the TurkeyHSD test   
-TukeyHSD(anova_model)
+# But you can do that easier with the TurkeyHSD test
 
+# Do the anova again....
+anova_model <- aov(breaks ~ tension, data = warpbreaks)
+summary(anova_model)
+
+# And the analyse....
+TukeyHSD(anova_model)
 plot(TukeyHSD(anova_model, "tension"))
 
 ```
@@ -343,12 +364,12 @@ warpbreaks %>%
   group_by(tension) %>%
   summarize(mean = mean(breaks))
 
-# identical
+# To all intents and purposes aov and lm are identical
 anova_model <- aov( breaks ~ tension, data = warpbreaks)
 summary(anova_model)
 
-anova_lm <- lm(breaks ~ tension, data = warpbreaks)
-summary(anova_lm)
+lm_model <- lm(breaks ~ tension, data = warpbreaks)
+summary(lm_model)
 
 warpbreaks %>%
   group_by(tension) %>%
@@ -390,8 +411,10 @@ warpbreaks %>%
 ```{r}
 model_null <- lm(breaks ~ tension, data = warpbreaks)
 summary(model_null)
+
 model_both <- lm(breaks ~ wool + tension, data = warpbreaks)
 summary(model_both)
+
 anova(model_both, model_null)
 
 ```
@@ -414,11 +437,13 @@ library(tidyverse, modelr)
 model_null <- lm(breaks ~ tension, data = warpbreaks)
 model_both <- lm(breaks ~ wool + tension, data = warpbreaks)
 model_full <- lm(breaks ~ wool * tension, data = warpbreaks)
+
 grid <- warpbreaks %>% 
   data_grid(wool, tension) %>% 
   gather_predictions(model_null, model_both,model_full) %>%
   mutate(model = factor(model, 
-                        levels = c("model_null", "model_both",
+                        levels = c("model_null", 
+                                   "model_both",
                                    "model_full"), 
                         labels = c("breaks ~ tension", 
                                    "breaks ~ wool+tension", 
@@ -430,7 +455,28 @@ grid <- warpbreaks %>%
   theme_minimal(base_size = 15))
 p +  geom_line(data = grid, aes(y = pred, group = tension)) + 
   facet_wrap(~ model)
+p
+
 ```
+
+
+```{r Linear models}
+
+model_null <- lm(breaks ~ tension, data = warpbreaks) 
+summary(model_null)
+
+model_both <- lm(breaks ~ wool + tension, data = warpbreaks)
+summary(model_both)
+
+model_full <- lm( breaks ~ tension*wool, data = warpbreaks) 
+summary(model_full)
+
+
+anova (model_both, model_null)
+
+anova (model_full, model_both)
+```
+
 
 
 
