@@ -5,20 +5,21 @@ date: "9/11/2019"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r}
-library(tidyverse)
-library(dplyr)
+library(pacman)
+p_load(tidyverse)
+p_load(ggplot2)
+p_load(gridExtra)
+theme_set(theme_minimal())
 ```
 
 
 # Exercise 1, 2, 3
 
 ## Exercise 1
-* predictor variable: independet
+* predictor variable: independent
 * response variable: dependent
 * outcome variable: dependent
 * explanatory variable: independent
@@ -43,9 +44,9 @@ glimpse(warpbreaks)
 
 
 
-```{r}
-plot(x = rt(xseq, df = 5), y = xseq)
-```
+# ```{r}
+# plot(x = rt(xseq, df = 5), y = xseq)
+# ```
 
 # Exercise 5 
 
@@ -88,13 +89,127 @@ p + geom_line(mapping = aes(x = x, y = y),
 
 ```
 
+# Exercise 6
+
+```{r}
+x <-rnorm(100000, 12, 2)
+density(x)
+
+nsamples = 1000
+set.seed(123) # make random part reproducable
+
+# Using more efficient code than in lectures, and use ggplot ;) sample_sizes_1 = 3
+
+sample_sizes_1 = 3
+sample_sizes_2 = 15
+sim_data_1 <- matrix(rnorm(nsamples * sample_sizes_1, 12, 2), nsamples) 
+sim_data_2 <- matrix(rnorm(nsamples * sample_sizes_2, 12, 2), nsamples) 
+sim_data_means_1 <- rowMeans(sim_data_1)
+sim_data_means_2 <- rowMeans(sim_data_2)
+
+# Use neat tibble trick (do you understand what it does?):
+combined_sim_data <- tribble(
+  ~sample_size, ~data,
+  sample_sizes_1, sim_data_means_1,
+  sample_sizes_2, sim_data_means_2,
+) %>% unnest()
+
+combined_sim_data %>%
+  ggplot(aes(data)) + 
+  geom_histogram() + 
+  geom_vline(xintercept = 12, color = "red") + 
+  facet_wrap(vars(sample_size), labeller = label_both) + 
+  labs(x = "Sample mean", title = "Distribution of sample means")
+
+combined_sim_data %>%
+  ggplot(aes(abs(data - 12))) + 
+  geom_density() + 
+  facet_wrap(vars(sample_size), labeller = label_both) + 
+  labs(x = "Absolute difference in sample and real mean", 
+       title = "Distribution of errors of sample means")
+
+
+combined_sim_data %>%
+  ggplot(aes(abs(data - 12))) + 
+  stat_ecdf() + 
+  geom_vline(xintercept = 1, color = "red") + 
+  facet_wrap(vars(sample_size), labeller = label_both) + 
+  labs(x = "Absolute difference in sample and real mean", 
+  title = "Distribution of errors of sample means")
+
+```
+
+
 # Exercixe 7
 
 
 ```{r}
-x <-rnorm(100000, 12, 2) 
 set.seed(123) 
-result_list = alist()
+x <-rnorm(500, mean = 5, sd = 2) 
+par(mfrow=c(1,2))
+plot(density(x))
+abline(v=5)
+plot(ecdf(x))
+abline(v=5)
+abline(h=0.5)
+par(mfrow=c(1,1))
+```
+
+# Exercise 8
+
+```{r}
+warpbreaks
+woolA = filter(warpbreaks, wool == "A")
+
+h_mean  = mean(woolA[,"breaks"])
+h_sd    = sd(woolA[,"breaks"])
+h_n     = length(woolA[,"breaks"])
+h_t_val = qt(0.975, df = h_n-1 )
+h_sem   = h_sd/sqrt(h_n)
+h_ci_p  = h_mean + h_t_val * h_sem
+h_ci_m  = h_mean - h_t_val * h_sem
+
+woolA$Index = seq.int(nrow(woolA))
+ggplot(data = woolA) +
+  geom_point(mapping = aes(x = Index, y = breaks)) +
+  geom_hline(yintercept = h_mean, col = 'green') +
+  geom_hline(yintercept = h_ci_p , col = 'red') +
+  geom_hline(yintercept = h_ci_m, col = 'red') +
+  scale_y_continuous(breaks=seq(10, 60, 10)) 
+  
+
+mean_woolA <- mean(warpbreaks$breaks[warpbreaks$wool  == "A"])
+sd_woolA <- sd(warpbreaks$breaks[warpbreaks$wool  == "A"])
+n <- sum(warpbreaks$wool  == "A")
+t_val <- qt(0.95, df = n-1 )
+error <- t_val * sd_woolA / sqrt(n)
+par(mfrow=c(1,1))
+plot(warpbreaks$breaks[warpbreaks$wool  == "A"])
+abline(h = mean_woolA)
+abline(h = c(mean_woolA - error, mean_woolA + error), lty = 2)
+ 
+```
+
+
+# Exercise 9
+
+```{r}
+
+
+# Split out commands to understand
+s = sample(sleep$extra, 5, replace = TRUE)
+m = mean(s)
+ms = mean(sample(sleep$extra, 5, replace = TRUE))
+
+
+# Take 5 samples, repeat this sampling 10000 times each time calculating the sample mean.
+b <- replicate(10000, mean(sample(sleep$extra, 5, replace = TRUE))) 
+
+# plot the ecdf of the means
+plot(ecdf(b), main = "bootstrapped - cdf", cex.main = 0.8) 
+plot(density(b), main = "bootstrapped - cdf", cex.main = 0.8) 
+quantile(b, c(0.01, 0.99))
+ 
 ```
 
 # Exercise 10 
@@ -102,20 +217,21 @@ result_list = alist()
 ```{r}
 hist(sleep$extra)
 shapiro.test(sleep$extra)
+qqnorm(sleep$extra)
+qqline(sleep$extra)
 ```
 The p-value is high, so likely normal
 
 
 # Exercise 11 Fold Change Data
 
-* Is not normal distributed, because tyhe regions from 0 to 1 and 1 to infinity are not symmetric
+* Is not normal distributed, because the regions from 0 to 1 and 1 to infinity are not symmetric
 * Make the x-axis logarithmic 
 
 ```{r}
 my_data <- data.frame(gene = 0.1 + runif(10000), 
                       control = 0.1 +runif(10000))
 my_data$fold_change <- my_data$gene/my_data$control
-my_data$fold_change
 
 hist(my_data$fold_change)
 abline(v=1, col = 'red', lwd=2)
@@ -126,4 +242,10 @@ hist(logfold)
 abline(v=0, col = 'red', lwd=2)
 shapiro.test(logfold[0:4999])
 
+#The shapiro is still bad, butthat is maybe because of having to cutr off sample points to 5000
+# Naybe with qqnorm ?
+
+qqnorm(logfold) 
+
+# Indeed, much better
 ```

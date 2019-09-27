@@ -1,0 +1,603 @@
+---
+title: "Case study group 15-Lopinavir"
+author: "Prepared by Eline Been, Judith Frinking and Hans Bakker"
+date: "20/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(ggplot2)
+p_load(readxl)
+p_load(gridExtra)
+p_load(modelr)
+p_load(knitr)
+p_load(kable)
+p_load(kableExtra)
+theme_set(theme_minimal())
+```
+
+\
+\
+\
+
+# Question 1
+
+
+This study involves 32 women who have each received 400 mg of the HIV treatment Lopinavir. The concentration of the drug (in mg/L) was measured for each of these women at four different timepoints: 1, 2, 4 and 8 hours after the administration of the drug. The age of the patients and whether they are pregnant or not is also supplied. It becomes apparent that there are four different patient types within the data:
+
+- 8 patients older than 35 and pregnant
+
+- 8 patients older than 35 and non-pregnant
+
+- 8 patients aged 35 or younger and pregnant
+
+- 8 patients aged 35 or younger and non-pregnant
+
+
+This data is used to determine whether there is a difference in elimination rate constant with regard to pregnancy and age.
+
+
+The necessary experimental data is supplied in an Excel file named “Lopinavir_Pregnancy.xlsx”. This data is read and handled in R to answer the abovementioned research question.
+
+
+```{r Read the files, include =  FALSE}
+
+getwd()
+
+#transfer the data from each Excel sheet to a table
+
+lsx1 <- read_excel(path = "Lopinavir_Pregnancy.xlsx",
+                   sheet = "Patient Characteristics",
+                   col_names = T)
+lsx2 <- read_excel(path = "Lopinavir_Pregnancy.xlsx", 
+                   sheet = "Concentrations",
+                   col_names = T, 
+                   skip = 1)
+```
+
+
+```{r Convert Lopinavir, include = FALSE}
+
+# Ensure the column names match and do the left join by ID
+colnames(lsx2)[colnames(lsx2) == "...1"] <- "ID" 
+Lopinavir <- left_join(lsx1, lsx2)
+
+# Rename columns to match the desired format
+colnames(Lopinavir)[colnames(Lopinavir) == "pregnant (1=yes)"] <- "PREGNANT"
+colnames(Lopinavir)[colnames(Lopinavir) == "age"] <- "AGE"
+
+Lopinavir <- Lopinavir %>%
+  gather(key = "TIME", value = "CONC", c(`1 hr`:`8 hr`)) %>%  # Make a long table
+  select('ID', 'TIME', 'CONC', 'PREGNANT', 'AGE') %>%         # Reorder the columns
+  arrange(ID) %>%                                             # Sort by ID
+  separate('TIME', c("TIME","delete")) %>%                    # Split out the TIME field
+  select(-'delete')                                           # Remove the column you do not need
+
+# Set the logical formats
+Lopinavir$PREGNANT <- as.factor(Lopinavir$PREGNANT)
+Lopinavir$ID       <- as.factor(Lopinavir$ID)
+Lopinavir$TIME     <- as.numeric(Lopinavir$TIME)
+Lopinavir$AGE      <- as.integer(Lopinavir$AGE)
+
+head(Lopinavir)
+
+glimpse(Lopinavir)
+
+count(Lopinavir, ID)
+count(Lopinavir, TIME)
+count(Lopinavir, AGE)
+count(Lopinavir, PREGNANT)
+count(Lopinavir, CONC)
+
+summary(Lopinavir)
+
+```
+
+\
+
+# Question 2
+
+The data from the Excel file was imported and processed in such a way that the data is in the format that is required for analysis. 
+
+In the table below the first 6 rows out of a total of 128 are displayed. 
+\
+\
+\
+
+
+```{r Display results 1, echo = FALSE}
+Lopinavir %>%
+  head () %>%
+  kable(caption = "Desired data format") %>%
+  kable_styling(bootstrap_options = c("basic", "bordered"), 
+                full_width = F, 
+                position = "c")
+```
+
+\
+
+# Question 3
+
+The concentration-time data is plotted below, on a linear and semi-logarithmic scale.
+
+It was chosen to plot the pregnant women in red and the non-pregnant women in black. The linetypes were also chosen according to the age of the patients: a solid line shows women older than 35, while a dashed line was chosen for women aged 35 or younger. 
+
+
+
+\
+
+```{r Preparation plot Lopinavir data - version 1, include =  F}
+
+# Add columns to the Lopinavir table for easy selection 
+#Lopinavir
+
+Lopinavir$preg_above_35    <- Lopinavir$PREGNANT == 1 & Lopinavir$AGE > 35
+Lopinavir$preg_below_35    <- Lopinavir$PREGNANT == 1 & Lopinavir$AGE <= 35
+Lopinavir$notpreg_above_35 <- Lopinavir$PREGNANT == 0 & Lopinavir$AGE > 35
+Lopinavir$notpreg_below_35 <- Lopinavir$PREGNANT == 0 & Lopinavir$AGE <= 35
+Lopinavir$Age35            <- Lopinavir$AGE <= 35
+
+pset_preg_above_35        <- filter(Lopinavir, Lopinavir$preg_above_35  == T)
+pset_preg_below_35        <- filter(Lopinavir, Lopinavir$preg_below_35 == T)
+pset_notpreg_above_35     <- filter(Lopinavir, Lopinavir$notpreg_above_35 == T)
+pset_notpreg_below_35     <- filter(Lopinavir, Lopinavir$notpreg_below_35 == T)
+
+pset_preg_above_35     = pset_preg_above_35 %>% mutate(CONC, log(CONC))
+pset_preg_below_35     = pset_preg_below_35 %>% mutate(CONC, log(CONC))
+pset_notpreg_above_35  = pset_notpreg_above_35 %>% mutate(CONC, log(CONC))
+pset_notpreg_below_35  = pset_notpreg_below_35 %>% mutate(CONC, log(CONC))
+```
+
+```{r Plot Lopinavir data - version 1, echo =  FALSE}
+# make a concentration-time plot, linear scale
+
+linear_plot <- ggplot() +
+  geom_point(data = pset_preg_above_35,               
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5, colour = 'red') +
+  geom_line(data = pset_preg_above_35, 
+            aes(group = ID, TIME, CONC, linetype = "solid", colour = "red"), 
+            size = 0.1) +
+  
+  geom_point(data = pset_preg_below_35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5,
+             colour = 'red') + 
+  geom_line(data = pset_preg_below_35, 
+            aes(group = ID,TIME, CONC, linetype = "dashed", colour = "red"), 
+            size = 0.1) +
+
+  geom_point(data = pset_notpreg_above_35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5,
+             colour = 'black') +
+  geom_line(data = pset_notpreg_above_35, 
+            aes(group=ID, TIME, CONC, linetype = "solid", colour = "black"), 
+            size = 0.1) +
+  
+  geom_point(data = pset_notpreg_below_35,
+             mapping = aes(x = TIME, y = CONC), 
+             size = 0.5, 
+             colour = 'black') +
+  geom_line(data = pset_notpreg_below_35, 
+            aes(group = ID, TIME, CONC, linetype="dashed", colour="black"), 
+            size = 0.1) + 
+
+  labs(x = "Time (h)",
+       y = "Concentration (mg/L)",
+       title = "Concentration-time data for Lopinavir", 
+       subtitle = "Linear scale",
+       caption = "(based on data from Pregnancy_Lopinavir.xlsx)") +
+  scale_color_manual(values = c("black","red"), 
+                     name   = "Pregnant (colour)", 
+                     labels = c("not pregnant","pregnant")) +
+  scale_linetype_manual(values = c("dashed", "solid"), 
+                        name   = "Age (linetype)", 
+                        labels = c("below 35","above 35")) 
+
+
+semi_log_plot <- ggplot()+
+  geom_point(data = pset_preg_above_35,                                           
+             mapping = aes(x = TIME, y = log(CONC)), 
+             size = 0.5, colour = 'red') +
+  geom_line(data = pset_preg_above_35, 
+            aes(group=ID,TIME, log(CONC), linetype = "solid", colour = "red"), 
+            size = 0.1) +
+  
+  geom_point(data = pset_preg_below_35,
+             mapping = aes(x = TIME, y = log(CONC)), 
+             size = 0.5,
+             colour = 'red') + 
+  geom_line(data = pset_preg_below_35, 
+            aes(group = ID,TIME, log(CONC), linetype = "dashed", colour = "red"), 
+            size = 0.1) +
+  
+  geom_point(data = pset_notpreg_above_35,
+             mapping = aes(x = TIME, y = log(CONC)), 
+             size = 0.5,
+             colour = 'black') +
+  geom_line(data = pset_notpreg_above_35, 
+            aes(group = ID,TIME, log(CONC), linetype = "solid", colour = "black"), 
+            size = 0.1) +
+  
+  geom_point(data = pset_notpreg_below_35,
+             mapping = aes(x = TIME, y = log(CONC)), 
+             size = 0.5, colour = 'black') +
+  geom_line(data = pset_notpreg_below_35, 
+            aes(group = ID, TIME, log(CONC), linetype = "dashed", colour = "black"), 
+            size = 0.1) +
+    
+  labs(x = "Time (h)", 
+       y = "ln(Concentration) (mg/L)", 
+       title = "Concentration-time data for Lopinavir", subtitle = "Semi-logarithmic scale", 
+       caption = "(based on data from Lopinavir_Pregnancy.xlsx)") +
+  
+  scale_color_manual(values = c("black","red"), 
+                     name   = "Pregnant (colour)", 
+                     labels = c("not pregnant","pregnant")) +
+  scale_linetype_manual(values = c("dashed", "solid"), 
+                        name   = "Age (linetype)", 
+                        labels = c("below 35","above 35")) 
+```
+
+```{r, echo = FALSE}
+linear_plot
+```
+  
+\
+\
+
+```{r, echo = FALSE}
+semi_log_plot
+```
+
+The plots show variation in the measured concentration for each individual. The semi log plot shows the effect somewhat more pronounced. 
+
+```{r, include = FALSE}
+
+
+# separate based on age for more insight
+
+Age35.labs = c("FALSE"="Age > 35","TRUE" = "Age <= 35")
+p_lin_age = linear_plot + 
+  facet_wrap(~Age35, nrow=1, ncol=2, scales="fixed", 
+             labeller = labeller(Age35 = Age35.labs)) + 
+  labs(title = "Concentration-time data for Lopinavir: separated by age", 
+       subtitle = "Linear scale")
+
+
+p_log_age = semi_log_plot + 
+  facet_wrap(~Age35, nrow=1, ncol=2, scales="fixed", 
+             labeller = labeller(Age35 = Age35.labs)) + 
+  labs(title = "Concentration-time data for Lopinavir: separated by age", 
+       subtitle = "Semi-logarithmic scale") 
+```
+
+
+
+```{r, include = FALSE}
+
+# separated by pregnancy 
+
+PREGNANT.labs = c("1" ="pregnant", "0" = "not pregnant")
+
+p_lin_preg = linear_plot + 
+  facet_wrap(~PREGNANT, nrow=1, ncol=2, scales="fixed", 
+             labeller = labeller(PREGNANT = PREGNANT.labs)) + 
+  labs(title = "Concentration-time data for Lopinavir: separated by pregnancy", 
+       subtitle = "Linear scale")
+
+p_log_preg = semi_log_plot + 
+  facet_wrap(~PREGNANT, nrow=1, ncol=2, scales="fixed", 
+             labeller = labeller(PREGNANT = PREGNANT.labs)) + 
+  labs(title = "Concentration-time data for Lopinavir: separated by pregnancy", 
+       subtitle = "Semi-logarithmic scale")
+```
+
+\
+
+# Question 4
+
+In order to convert the concentration to ln-values of concentrations, the function log() was used. These values were stored in a new column that was added to the Lopinavir table, and this column was renamed "log_of_CONC".
+
+An excerpt of the Lopinavir table included below: it shows the newly added "log_of_CONC" column.   
+
+
+```{r Question 4, include = F}
+Lopinavir = select(Lopinavir, ID, TIME, CONC, PREGNANT, AGE)
+
+Lopinavir <- mutate(Lopinavir, log(CONC))
+colnames(Lopinavir)[colnames(Lopinavir) == "log(CONC)"] <- "log_of_CONC"
+
+```
+
+```{r Display results, echo = FALSE}
+Lopinavir %>%
+  head () %>%
+  kable(caption = "Desired format of the data with logarithm of concentration",) %>%
+  kable_styling(bootstrap_options = c("basic", "bordered"), 
+                full_width = F, 
+                position = "c")
+```
+
+\
+
+# Question 5
+
+Two types of categories were made: the first considers only age or only pregnancy (Age > 35, Age <= 35, pregnant or not pregnant), while the second category considers possible combinations of age and pregnancy (Age > 35 and pregnant, Age > 35 and not pregnant, Age <= 35 and pregnant, Age <= 35 and not pregnant).
+
+For all groups, trendlines are added in the semi-logarithmic plot. This is done to help visualize eventual changes in the slope of these trendlines.
+
+```{r, echo = FALSE}
+plot_sl_trendline_1 <- ggplot() +
+  geom_point(data = filter(Lopinavir, AGE>35),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'red'), 
+             size = 0.5) +
+  geom_smooth(data = filter(Lopinavir, AGE>35),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'red'), 
+             linetype = 'solid',
+             size = 0.1,
+             method ='lm', se = FALSE) +
+  geom_point(data = filter(Lopinavir, AGE<=35),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'black'), 
+             size = 0.5) + 
+  geom_smooth(data = filter(Lopinavir, AGE<=35),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'black'),
+             linetype = 'solid',
+             size = 0.1,
+             method ='lm', se = FALSE) +
+  geom_point(data = filter(Lopinavir, PREGNANT == 1),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'blue'), 
+             size = 0.5) +
+  geom_smooth(data = filter(Lopinavir, PREGNANT == 1),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'blue'),
+             linetype = 'solid',
+             size = 0.1, 
+             method='lm', se = FALSE) +
+  geom_point(data = filter(Lopinavir, PREGNANT == 0),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'green'), 
+             size = 0.5) +
+  geom_smooth(data = filter(Lopinavir, PREGNANT == 0),
+             mapping = aes(x = TIME, y = log(CONC), colour = 'green'),
+             linetype = 'solid', 
+             size = 0.1, 
+             method ='lm', se = FALSE) +
+ 
+  labs(x = "Time (h)", 
+       y = "ln(Concentration) (mg/L)",
+       title = "Concentration-time data for Lopinavir: trendlines per group, Category 1", 
+       subtitle = "Semi-logarithmic scale",
+       caption = "(based on data from Lopinavir_Pregnancy.xlsx)") +
+  scale_color_manual(name = "Pregnancy & Age",  
+                     values = c("red", "black", "blue", "green" ), 
+                     labels = c("above 35", "below 35", "pregnant", "not pregant")) 
+  
+
+plot_sl_trendline_2 <- ggplot() +
+  geom_point(data = pset_preg_above_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'red'), 
+             size = 0.5) +
+  geom_smooth(data = pset_preg_above_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'red',
+             linetype = 'solid'), 
+             size = 0.1, 
+             method = 'lm', se = FALSE) +
+  geom_point(data = pset_preg_below_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'black'), 
+             size = 0.5) + 
+  geom_smooth(data = pset_preg_below_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'black',
+             linetype = 'solid'), 
+             size = 0.1, 
+             method = 'lm', se = FALSE) +
+  geom_point(data = pset_notpreg_above_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'red'), 
+             size = 0.5) +
+  geom_smooth(data = pset_notpreg_above_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'red',
+             linetype = 'dashed'), 
+             size = 0.1, 
+             method='lm', se = FALSE) +
+  geom_point(data = pset_notpreg_below_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'black'), 
+             size = 0.5) +
+  geom_smooth(data = pset_notpreg_below_35,
+             mapping = aes(x = TIME, y = CONC, colour = 'black',
+             linetype = 'dashed'), 
+             size = 0.1, 
+             method='lm', se = FALSE) +
+  
+  labs(color = "Patient", 
+       x = "Time (h)", 
+       y = "ln(Concentration) (mg/L)", 
+       title = "Concentration-time data for Lopinavir: trendlines per group, Category 2", 
+       subtitle = "Semi-logarithmic scale", 
+       caption = "(based on data from Lopinavir_Pregnancy.xlsx)") +
+  
+  scale_color_manual(values = c("black","red"), 
+                     name = "Pregnant (colour)", 
+                     labels = c("not pregnant","pregnant")) +
+  scale_linetype_manual(values = c("dashed", "solid"), 
+                        name = "Age (linetype)", 
+                        labels = c("below 35","above 35")) 
+  
+```
+
+```{r, echo = FALSE}
+plot_sl_trendline_1
+```
+
+\
+\
+
+```{r, echo = FALSE}
+plot_sl_trendline_2
+```
+
+
+
+
+Based on the plots, there appear to be different average slopes for the considered groups. 
+
+Based on this visual inspection, different values are expected for elimination rate constants between pregnant and non-pregnant patients. The same is to be expected for women above and below 35 years old. This also appears to be the case for combinations of age and pregnancy.
+
+The numerical values of these slopes are calculated by fitting a linear model to the ln(concentration)-time data from the groups. For this purpose, the lm() function was used. The values are reported below:
+
+```{r Plot Lopinavir data - version 2, echo =  FALSE}
+
+Lopinavir$Group  <- "Code"   # Create a 
+
+for (i in 1:nrow(Lopinavir)) {
+  if (Lopinavir[i,]$PREGNANT == 1) {
+    if (Lopinavir[i,]$AGE > 35) {
+      Lopinavir[i,]$Group = "Pregnant, Age > 35"
+    } else {
+      Lopinavir[i,]$Group = "Pregnant, Age <= 35"
+    }
+  }
+  else {
+    if (Lopinavir[i,]$AGE > 35) {
+      Lopinavir[i,]$Group = "Not Pregnant, Age > 35"
+    } else {
+      Lopinavir[i,]$Group = "Not Pregnant, Age <= 35"
+    }
+  }
+}
+```
+
+```{r Patient Table, include =  F}
+patient_table <- unique(select(Lopinavir, ID, Group))
+patient_table$slope = 0
+
+for (i in 1: nrow(patient_table)) {
+  t <- filter(Lopinavir, ID == i)
+  n = lm (data = t, log_of_CONC ~ TIME)
+  patient_table[i,]$slope = coef(n)[2]
+}
+
+slope_table <- patient_table %>%
+  group_by(Group) %>%
+  summarise("Slope" = mean(slope))
+```
+
+```{r New Table, echo = F}
+
+n1 = lm(data = filter(Lopinavir, AGE > 35), log_of_CONC~TIME)
+n2 = lm(data = filter(Lopinavir, AGE <= 35), log_of_CONC~TIME)
+n3 = lm(data = filter(Lopinavir, PREGNANT == 1), log_of_CONC~TIME)
+n4 = lm(data = filter(Lopinavir, PREGNANT == 0), log_of_CONC~TIME)
+
+Slope = c(coef(n1)["TIME"],
+          coef(n2)["TIME"],
+          coef(n3)["TIME"],
+          coef(n4)["TIME"])
+
+Group = c("Age > 35",
+          "Age <= 35",
+          "Pregnant",
+          "Not Pregnant")
+
+data.frame(Group, Slope) %>%
+  kable(caption = "Fitted slope per single patient group, category 1") %>%
+  kable_styling(bootstrap_options = c("basic", "bordered"),
+                full_width = FALSE,
+                position = "center")
+```
+
+```{r, echo = FALSE }
+slope_table %>%
+  kable(caption = "Fitted slope per combined patient group, category 2",) %>%
+  kable_styling(bootstrap_options = c("basic", "bordered"), 
+                full_width = FALSE, 
+                position = "center")
+```
+
+\
+
+These slope values indeed indicate that on average, the elimination rate constants seem to differ per considered group. However, this does not yet give an indication about the statistical significance of these differences. 
+
+\
+
+# Question 6
+
+The patients were assigned to one of four different groups (Age > 35 and pregnant, Age > 35 and not pregnant, Age <= 35 and pregnant, Age <= 35 and not pregnant), and this result was stored in the column "Group" in the Lopinavir table. Using the lm() function, the slopes of ln(concentration) against time are calculated (see question 5). The individual slope values for all 32 individuals are displayed in the table below.
+
+```{r, echo = FALSE }
+patient_table %>%
+  kable(caption = "Fitted slope per patient") %>%
+  kable_styling(bootstrap_options = c("basic", "bordered"), 
+                full_width = FALSE, 
+                position = "center")
+```
+
+
+This table indeed shows the group each patient was assigned to, and what the corresponding elimination rate constant is.
+
+\
+
+# Question 7
+ 
+For this question the table from question 6 was used, which contains the group of each patient and their individual elimination rate constant value. 
+ 
+The research question was to determine whether the elimination rate constants (given by the calculated slopes) are statistically significantly different for these four groups. 
+ 
+ 
+For this purpose, an anova (aov()) was run on the data from the table presented in question 6, providing comparative data about whether the differences in slopes are significant.
+
+The output shows a Pr(>F) value of 3.75e-06. This number is lower than 0.05, so the null hypothesis that there are no differences in slope can be rejected.
+
+This aov() was followed up with a Tukey-Kramer test to determine between which groups the differences are present.  
+ 
+```{r, include = FALSE}
+out = aov(slope ~ Group, data = patient_table)
+summary(out)
+```
+ 
+```{r, include = FALSE}
+TukeyHSD(out)
+```
+ 
+\
+
+From the Tukey-Kramer test, four comparisons were considered ("test" in the table), which answer four underlying questions ("Description in the table"). If the adjusted p-value is lower than 0.05, then the null hypothesis that there is no difference slope between the two groups can be rejected.
+
+The results are presented in the table below:
+
+\
+ 
+```{r, echo = FALSE}
+t = tribble(
+~Row, ~Description, ~Test, ~"adjusted p-value", ~Outcome,
+"1", "Given Pregnancy, test impact of age",       "Pregnant, Age > 35 - Pregnant, Age <= 35",         0.3421212, "No impact",
+"2", "Given Non-pregnancy, test impact of age",     "Not Pregnant, Age > 35 - Not Pregnant, Age <= 35", 0.0119074, "Impact",
+"3",  "Given Age > 35, test impact of pregnancy",  "Pregnant, Age > 35 - Not Pregnant, Age > 35",      0.0161394, "Impact",
+"4","Given Age <= 35, test impact of pregnancy", "Pregnant, Age <= 35 - Not Pregnant, Age <= 35",    0.0002250, "Impact",)
+t %>%
+  kable(caption = "Results and interpretation of aov and Tukey-Kramer test") %>%
+  kable_styling(bootstrap_options = c("basic", "bordered"),
+                full_width = FALSE,
+                position = "left")
+```
+
+In answering the main research question, the main results are as follows:
+
+Row 1 shows that:
+
+* In case of pregnancy, age has no statistically significant impact on the elimination rate constant.
+ 
+ 
+From row 2 can be concluded that:
+ 
+* In case of non-pregnancy, age has a statistically significant impact on the elimination rate constant.
+
+From the rows 3 and 4, the following conclusion can be drawn:
+ 
+* For women in any age group (above and below 35 years), the pregnancy state has a significant impact on the elimination rate constant.
+
+
+
+
+

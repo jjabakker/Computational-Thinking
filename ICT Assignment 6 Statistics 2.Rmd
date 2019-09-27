@@ -5,6 +5,8 @@ date: "9/13/2019"
 output: html_document
 ---
 
+\newpage
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -100,7 +102,9 @@ an1 = aov(data = iris, formula = Sepal.Length ~ Species)
 an2 = aov(data = iris, formula = Petal.Length ~ Species)
 an3 = aov(data = iris, formula = Sepal.Width ~ Species)
 an4 = aov(data = iris, formula = Petal.Width ~ Species)
+```
 
+```{r}
 #Show boxplots
 par(mfrow=c(2,2))
 boxplot(Sepal.Length  ~ Species, data = iris, main = "Sepal.Length")
@@ -108,7 +112,9 @@ boxplot(Sepal.Width  ~ Species, data = iris, main = "Sepal.Width")
 boxplot(Petal.Length  ~ Species, data = iris, main = "Petal.Length")
 boxplot(Petal.Width  ~ Species, data = iris, main = "Petal.Width")
 par(mfrow=c(1,1))
+```
 
+```{r}
 # Show the four plots for each model
 par(mfrow=c(2,2))
 plot(an1)
@@ -250,7 +256,7 @@ chicken_model_full <- lm(weight ~ Time * Diet, data = ChickWeight)
 summary(chicken_model_full)
 
 # Do anova comparison, this works only for comparing increasingly complex models
-# You cannot compare two completelt different models (such as Time and Diet) 
+# You cannot compare two completely different models (such as Time and Diet) 
 anova(chicken_model_Diet, chicken_model_Time)
 
 # The next two models can be compared

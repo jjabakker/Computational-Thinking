@@ -1,10 +1,27 @@
+---
 title: "R Notebook"
 output:
   html_document:
     number_sections: yes
     toc: yes
     toc_depth: 2
+editor_options: 
+  chunk_output_type: console
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(nycflights13)
+p_load(ggplot2)
+p_load(modelr)
+p_load(Deriv)
+p_load(deSolve)
+p_load(phaseR)
+p_load(gridExtra)
+theme_set(theme_minimal())
+```
 
 
 # Constructing normal distributions 
@@ -28,8 +45,7 @@ x3 <-rnorm(1000, mean = 12, sd = 2)
 x4 <-rnorm(10000, mean = 12, sd = 2)
 x5 <-rnorm(100000, mean = 12, sd = 2)
 x6 <-rnorm(1000000, mean = 12, sd = 2)
-x7 <-rnorm(10000000, mean = 12, sd = 2)
-x8 <-rnorm(1000000, mean = 12, sd = 2)
+
 
 # Plot density distribution of the 100000 points
 # Creating a 'theoretical' normal curve 
@@ -42,11 +58,13 @@ plot(density(x3))
 plot(density(x4))
 plot(density(x5))
 plot(density(x6))
-plot(density(x7))
-plot(density(x8))
+
 par(mfrow=c(1,1))
 
 ```
+
+
+
 
 # Example of sampling size
 
@@ -234,7 +252,7 @@ sem = sample_sd / sqrt(n_sample)
 # For fun, calculate mean and SD yourself to check
 sn = length(x_s)
 sm = sum(x_s) / sn
-sd = sqrt(sum((sample - sm)^2) / (sn - 1))
+sd = sqrt(sum((x_s - sm)^2) / (sn - 1))
 
 
 # Formula for confidence interval of 0.95
@@ -319,7 +337,7 @@ hist(b, main = "bootstrapped" , cex.main = 0.8)
 plot(ecdf(b), main = "bootstrapped - cdf" , cex.main = 0.8)
 
 qb <- quantile(b, c(0.025,0.975))
-abline(v = qb)
+
 
 ```
 

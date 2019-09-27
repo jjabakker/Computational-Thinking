@@ -259,9 +259,6 @@ for (state in c(0.1, 1, 10, 20, 30) ) {
   plot(out2, main = "", ylab = "x")
 }
 
-
-
-
 ```
 
 # Question 12

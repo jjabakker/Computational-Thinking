@@ -2,7 +2,9 @@
 title: "Combined Assignment"
 author: "Hans"
 date: "9/13/2019"
-output: html_document
+output:
+  word_document: default
+  html_document: default
 ---
 
 # Intro Workshop
@@ -1095,7 +1097,8 @@ glimpse (cw_wide)
 #   the columns you want to gather '0'..'21'
 #   the name pd the new columns: key = 'New Col'
 
-cw_long_new =  gather(cw_wide, key = 'Time', value = 'weight', ... = c('0':'21'))
+# cw_long_new =  gather(cw_wide, key = 'Time', value = 'weight', ... = c('0':'21'))
+cw_long_new =  gather(cw_wide, key = 'Time', value = 'weight', c('0':'21'))
 glimpse(cw_long_new)
 glimpse(cw_long)
 
@@ -1121,8 +1124,13 @@ iris is tidy, since it satisfies the 3 rules. However it could be argued that it
 As it turns out, although iris can be considered tidy, it is possible to make iris longer. Reformat the data to this longer format, one value per row. Store the result in the variable iris_longer . What are the dimensions of the original iris and the “longer” data?
 
 ```{r}
-iris_longer <- gather(data=as.tibble(iris),
-                      ... = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
+
+# The format is a bit unusal: "..." = the name o the parameter in which you specify the colums 
+#iris_longer <- gather(data = as.tibble(iris),
+#                     ... = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
+#                      key = 'Variable', value = 'Measurement')
+iris_longer <- gather(data = as_tibble(iris),
+                      c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
                       key = 'Variable', value = 'Measurement')
   
 head(iris_longer)
@@ -1150,8 +1158,11 @@ new_iris <- rowid_to_column(new_iris, var = 'Id')
 head(new_iris)
 
 # If you now gather, the rowid comes is maintained
+#iris_longer <- gather(data = as.tibble(new_iris),
+#                     ...  = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
+#                      key  = 'Variable', value = 'Measurement')
 iris_longer <- gather(data = as.tibble(new_iris),
-                      ...  = c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
+                      c('Sepal.Length', 'Sepal.Width', 'Petal.Length', 'Petal.Width'),
                       key  = 'Variable', value = 'Measurement')
 head(iris_longer)
 
@@ -1247,7 +1258,7 @@ iris_longer %>%
 	summarise(mean_run = mean(Measurement))
 ```
 
-# Exercise 11: 
+## Exercise 11: 
 
 Can you filter the iris dataset to keep the flowers that have a larger Sepal.Length than the average of their species? (Hint: You don’t need summarize!)
 
@@ -1259,7 +1270,7 @@ iris_wide %>%
 ```
 
 
-# Exercise 12: 
+## Exercise 12: 
 From the previous question, how many flowers are in each group? Use n() , tally() or count() . Do you need the group_by again?
 
 ```{r}
@@ -1268,7 +1279,7 @@ iris_wide %>%
   filter(Sepal.Length > mean(Sepal.Length)) %>% summarise(n= n())
 ```
 
-# Exercise 13: 
+## Exercise 13: 
 Find all flights from the “Envoy Air” airline. Write 3 different solutions using left_join , right_join , and semi_join .
 
 ```{r}

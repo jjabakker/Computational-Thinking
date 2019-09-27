@@ -1,0 +1,205 @@
+---
+title: "Anova"
+author: "Hans"
+date: "9/21/2019"
+output: html_document
+---
+
+# Setup - always run
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pacman)
+p_load(tidyverse)
+p_load(nycflights13)
+p_load(ggplot2)
+p_load(Deriv)
+p_load(deSolve)
+p_load(phaseR)
+p_load(gridExtra)
+p_load(FSA)
+theme_set(theme_minimal())
+```
+
+### --------------------------------------------------------------
+### One-way anova, SAS example, pp. 155-156
+### --------------------------------------------------------------
+
+
+```{r Read and format Data}
+
+Input =("
+Location   Aam
+Tillamook  0.0571 
+Tillamook  0.0813 
+Tillamook  0.0831 
+Tillamook  0.0976 
+Tillamook  0.0817 
+Tillamook  0.0859 
+Tillamook  0.0735 
+Tillamook  0.0659 
+Tillamook  0.0923 
+Tillamook  0.0836 
+Newport    0.0873 
+Newport    0.0662 
+Newport    0.0672 
+Newport    0.0819 
+Newport    0.0749 
+Newport    0.0649 
+Newport    0.0835 
+Newport    0.0725 
+Petersburg 0.0974 
+Petersburg 0.1352 
+Petersburg 0.0817 
+Petersburg 0.1016 
+Petersburg 0.0968 
+Petersburg 0.1064 
+Petersburg 0.1050 
+Magadan    0.1033 
+Magadan    0.0915 
+Magadan    0.0781 
+Magadan    0.0685 
+Magadan    0.0677 
+Magadan    0.0697 
+Magadan    0.0764 
+Magadan    0.0689 
+Tvarminne  0.0703 
+Tvarminne  0.1026  
+Tvarminne  0.0956 
+Tvarminne  0.0973 
+Tvarminne  0.1039 
+Tvarminne  0.1045
+")
+
+Data = read.table(textConnection(Input), header = TRUE)
+ 
+# Specify the order of factor levels for plots and Dunnett comparison
+Data = mutate(Data, Location = factor(Location, levels = unique(Location)))
+ 
+# Produce summary statistics
+Summarize(Aam ~ Location, data=Data, digits=3)
+```
+
+```{r Model}
+
+# Fit the linear model and conduct ANOVA
+model = lm(Aam ~ Location, data = Data)
+
+anova(model)       # Produces type I sum of squares
+summary(model)     # Produces r-square, overall p-value, parameter estimates
+```
+
+```{r}
+
+# Checking assumptions of the model
+hist(residuals(model), col="darkgray")
+plot(fitted(model), residuals(model))
+
+```
+
+```{r}
+# Simple box plots of values across groups
+ 
+boxplot(Aam ~ Location,
+        data = Data,
+        ylab="aam / height",
+        xlab="Location")
+
+### Summarize the data frame (Data) into a table
+
+p_load(Rmisc)   
+
+Data2 = summarySE(data=Data, 
+          "Aam", 
+          groupvars="Location", 
+          conf.interval = 0.95)
+
+Tabla = as.table(Data2$Aam)          
+rownames(Tabla) = Data2$Location
+
+barplot(Tabla, 
+        ylab="aam / height", 
+        xlab="Location")
+ 
+```
+
+```{r}
+library(ggplot2)
+
+offset.v = -3     # offsets for mean letters
+offset.h = 0.5
+
+ggplot(Data2, 
+       aes(x = Location, y = Aam, 
+           ymax=0.12, ymin=0.0))  +
+       geom_bar(stat="identity", fill="gray50",
+           colour = "black", width = 0.7)  +
+       geom_errorbar(aes(ymax=Aam+se, ymin=Aam-se), 
+                     width=0.0, size=0.5, color="black")  +
+       geom_text(aes(label=c("bc","c","a","bc","ab"),
+                 hjust=offset.h, vjust=offset.v)) +              
+       labs(x = "Sample location", 
+            y = "aam / height")  +
+       ## ggtitle("Main title") + 
+       theme_bw()  +
+       theme(panel.grid.major.x = element_blank(),
+             panel.grid.major.y = element_line(colour = "grey80"),
+             plot.title = element_text(size = rel(1.5), 
+             face = "bold", vjust = 1.5),
+             axis.title = element_text(face = "bold"),
+             axis.title.y = element_text(vjust= 1.8),
+             axis.title.x = element_text(vjust= -0.5),
+             panel.border = element_rect(colour="black")
+             )
+```
+
+
+# Exmple II
+
+```{r}
+females = rnorm(4, mean=200, sd=20)
+males = rnorm(4, mean=120, sd=20)
+kidz = rnorm(4, mean=380, sd=20)
+pitchstudy = data.frame(females, males, kidz)
+```
+
+```{r}
+sum((females - mean(females))^2)
+sum(females^2) - (sum(females)^2)/4
+
+```{r}
+bigvector = c(females, males, kidz)
+CF = (sum(bigvector))^2/length(bigvector)
+total.ss = sum(bigvector^2)-CF
+between.ss = (sum(females)^2)/4 + (sum(males)^2)/4 + (sum(kidz)^2)/4 - CF
+within.ss = total.ss - between.ss
+
+df.total = length(bigvector)-1
+df.between = ncol(pitchstudy)-1
+df.within = df.total-df.between
+
+between.ms = between.ss/df.between
+within.ms = within.ss/df.within
+F.value = between.ms/within.ms
+    
+1 - pf(F.value,2,9)
+```
+
+
+```{r}
+
+
+# Now more automatic
+groups = c(rep("female",4),rep("male",4),rep("kidz",4))
+pitchstudy = data.frame(c(1:12), groups, bigvector)
+colnames(pitchstudy) = c("subjects","groups","bigvector")
+summary(aov(bigvector ~ groups + Error(subjects), data = pitchstudy))
+summary(pitchstudy)
+class(pitchstudy$subjects)
+pitchstudy$subjects = as.factor(pitchstudy$subjects)
+summary(aov(bigvector ~ groups + Error(subjects), data=pitchstudy))
+
+
+```
+
+
